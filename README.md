@@ -66,7 +66,7 @@ Now, when your frontend send a request to your api, you just need to attach jwt 
 
 
 ````
-composer require
+composer require tigerwill90/xsrf-middleware
 ````
 
 ## Setup, test and dependencies
