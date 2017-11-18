@@ -149,6 +149,7 @@ class XsrfProtection {
      */
     public function fetchClaim($request,$tokenname,$claimname) {
         $decode = $request->getAttribute($tokenname);
+        $decode = $this->transformInputToAssocArray($decode);
         if (!array_key_exists($claimname,$decode)) {
             return false;
         }
@@ -169,12 +170,22 @@ class XsrfProtection {
      */
     public function validateToken($request,$cookiename,$tokenname,$claimname) {
         $decode = $request->getAttribute($tokenname);
+        $decode = $this->transformInputToAssocArray($decode);
         $csrfcookie = FigRequestCookies::get($request, $cookiename);
         $csrfvalue = explode("=", $csrfcookie);
         if ($decode->$claimname === $csrfvalue[1]) {
             return true;
         }
         return false;
+    }
+
+    public function transformInputToAssocArray($decode) {
+        $isValideDecodedJson = json_decode($decode, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $array = $isValideDecodedJson;
+            return $array;
+        }
+        return $decode;
     }
 
 
