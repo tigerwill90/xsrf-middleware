@@ -5,7 +5,8 @@ Csrf protection based on double submit pattern, cookie - JWT alternative.
 I am really new to the php world (programming too) and this is my first middleware,
 currently in developpement, for Slim 3 framework. This middleware is very inspired
 by [PSR-7 JWT Authentication Middleware](https://github.com/tuupola/slim-jwt-auth) from
-[Tuupola](https://github.com/tuupola).
+[Tuupola](https://github.com/tuupola). **Actually, this middleware is designed to work with
+JWT/Branca Authentication Middleware.**
 
 The goal is to protect rest api again [Cross-site request forgery](https://en.wikipedia.org/wiki/Cross-site_request_forgery)
 attak, using double submit cookie pattern (stateless).
