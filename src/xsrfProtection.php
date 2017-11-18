@@ -157,7 +157,7 @@ class XsrfProtection {
         if (!array_key_exists($claimname,$decode)) {
             return false;
         }
-        if (!isset($decode->$claimname)) {
+        if (!isset($decode[$claimname])) {
             return false;
         }
         return true;
@@ -176,9 +176,9 @@ class XsrfProtection {
         $decode = $request->getAttribute($tokenname);
         $decode = $this->transformInputToAssocArray($decode);
         $csrfcookie = FigRequestCookies::get($request, $cookiename);
-        error_log("branca : " . $decode->$claimname . " cookie : " . "$csrfcookie");
+        error_log("branca : " . $decode[$claimname] . " cookie : " . "$csrfcookie");
         $csrfvalue = explode("=", $csrfcookie);
-        if ($decode->$claimname === $csrfvalue[1]) {
+        if ($decode[$claimname] === $csrfvalue[1]) {
             return true;
         }
         return false;
