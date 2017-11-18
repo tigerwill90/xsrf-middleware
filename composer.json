@@ -1,0 +1,31 @@
+{
+    "name": "tigerwill90/xsrf-middleware",
+    "description": "Csrf protection based on double submit pattern, cookie - JWT alternative",
+    "keywords" : [
+      "middleware",
+      "jwt",
+      "branca",
+      "csrf",
+      "xsrf",
+      "cookie",
+      "auth"
+    ],
+    "homepage": "https://github.com/tigerwill90/slim3-xsrf-middleware",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sylvain",
+            "email": "sylvain.muller90@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+      "dflydev/fig-cookies": "^1.0"
+    },
+    "autoload": {
+    "psr-4": {
+        "Tigerwill90\\Middleware\\": "src"
+      }
+    }
+}
