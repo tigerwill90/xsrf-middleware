@@ -6,8 +6,6 @@
  * Time: 16:04
  */
 
-//littles test
-
 namespace Tigerwill90\Middleware;
 
 use \Psr\Http\Message\ServerRequestInterface as Request;
