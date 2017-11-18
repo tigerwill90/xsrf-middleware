@@ -68,21 +68,25 @@ class XsrfProtection {
             if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
                 // If cookie cannot be found, return 401 Unauthorized
                 if (false === $cookie = $this->fetchCookie($request,$cookiename)) {
+                    error_log("cookie not found");
                     return $response->withStatus(401);
                 }
 
                 // If token cannot be found, return 401 Unauthorized
                 if (false === $token = $this->fetchToken($request,$tokenname)) {
+                    error_log("token not found");
                     return $response->withStatus(401);
                 }
 
                 // If claim cannot be found, return 401 Unauthorized
                 if (false === $claim = $this->fetchClaim($request,$tokenname,$claimname)) {
+                    error_log("claim not found");
                     return $response->withStatus(401);
                 }
 
                 // If csrf cookie don't match with claim, return 401 Unauthorized
                 if (false === $match = $this->validateToken($request,$cookiename,$tokenname,$claimname)) {
+                    error_log("cookie don't match with claim");
                     return $response->withStatus(401);
                 }
             }
@@ -172,6 +176,7 @@ class XsrfProtection {
         $decode = $request->getAttribute($tokenname);
         $decode = $this->transformInputToAssocArray($decode);
         $csrfcookie = FigRequestCookies::get($request, $cookiename);
+        error_log("branca : " . $decode->$claimname . " cookie : " . "$csrfcookie");
         $csrfvalue = explode("=", $csrfcookie);
         if ($decode->$claimname === $csrfvalue[1]) {
             return true;
@@ -182,6 +187,7 @@ class XsrfProtection {
     public function transformInputToAssocArray($decode) {
         $isValideDecodedJson = json_decode($decode, true);
         if (json_last_error() === JSON_ERROR_NONE) {
+            error_log("Array was a json, succefully decoded");
             $array = $isValideDecodedJson;
             return $array;
         }
