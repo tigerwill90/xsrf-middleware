@@ -11,7 +11,6 @@
       "auth"
     ],
     "homepage": "https://github.com/tigerwill90/slim3-xsrf-middleware",
-    "type": "project",
     "license": "MIT",
     "authors": [
         {
