@@ -1,9 +1,10 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: Sylvain
+ * User: Sylvain Muller
  * Date: 18.11.2017
  * Time: 16:04
+ * Licence MIT
  */
 
 namespace Tigerwill90\Middleware;
