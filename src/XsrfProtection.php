@@ -1,25 +1,26 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Sylvain Muller
- * Date: 18.11.2017
- * Time: 16:04
- * Licence MIT
+ * This file is part of xcsrf-middleware package
+ *
+ * Copyright (c) 2017 Sylvain Muller
+ *
+ * Project home : https://github.com/tigerwill90/slim3-xsrf-middleware
+ * License : MIT
  */
+
+declare(strict_types=1);
 
 namespace Tigerwill90\Middleware;
 
-use \Psr\Http\Message\ServerRequestInterface as Request;
-use \Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 use Dflydev\FigCookies\FigRequestCookies;
-
 
 class XsrfProtection {
 
     /**
-     * Default options can be overrided
+     * Default options can be overridden
      */
-
     private $options = [
         "path" => "/",
         "passthrough" => null,
@@ -51,7 +52,7 @@ class XsrfProtection {
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);
 
-        // if request match whith passthrough, no need double submit check
+        // if request match with passthrough, no need double submit check
         foreach ((array)$this->options["passthrough"] as $passthrough) {
             $passthrough = rtrim($passthrough, "/");
             if (!!preg_match("@^{$passthrough}(/.*)?$@", $uri)) {
@@ -69,25 +70,21 @@ class XsrfProtection {
             if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
                 // If cookie cannot be found, return 401 Unauthorized
                 if (false === $cookie = $this->fetchCookie($request,$cookiename)) {
-                    error_log("cookie not found");
                     return $response->withStatus(401);
                 }
 
                 // If token cannot be found, return 401 Unauthorized
                 if (false === $token = $this->fetchToken($request,$tokenname)) {
-                    error_log("token not found");
                     return $response->withStatus(401);
                 }
 
                 // If claim cannot be found, return 401 Unauthorized
                 if (false === $claim = $this->fetchClaim($request,$tokenname,$claimname)) {
-                    error_log("claim not found");
                     return $response->withStatus(401);
                 }
 
                 // If csrf cookie don't match with claim, return 401 Unauthorized
                 if (false === $match = $this->validateToken($request,$cookiename,$tokenname,$claimname)) {
-                    error_log("cookie don't match with claim");
                     return $response->withStatus(401);
                 }
             }
@@ -122,8 +119,8 @@ class XsrfProtection {
      */
     public function fetchCookie($request,$cookiename) {
         $csrfcookie = FigRequestCookies::get($request, $cookiename);
-        $csrfvalue = explode("=", $csrfcookie);
-        if (!isset($csrfvalue[1])) {
+        $csrfvalue = $csrfcookie->getValue();
+        if (!isset($csrfvalue)) {
             return false;
         }
         return true;
@@ -154,7 +151,10 @@ class XsrfProtection {
      */
     public function fetchClaim($request,$tokenname,$claimname) {
         $decode = $request->getAttribute($tokenname);
-        $decode = $this->transformInputToAssocArray($decode);
+        $decode = $this->transformDecodedToAssocArray($decode);
+        if(!is_array($decode)) {
+            return false;
+        }
         if (!array_key_exists($claimname,$decode)) {
             return false;
         }
@@ -175,31 +175,37 @@ class XsrfProtection {
      */
     public function validateToken($request,$cookiename,$tokenname,$claimname) {
         $decode = $request->getAttribute($tokenname);
-        $decode = $this->transformInputToAssocArray($decode);
+        $decode = $this->transformDecodedToAssocArray($decode);
         $csrfcookie = FigRequestCookies::get($request, $cookiename);
-        error_log("branca : " . $decode[$claimname] . " cookie : " . "$csrfcookie");
-        $csrfvalue = explode("=", $csrfcookie);
-        if ($decode[$claimname] === $csrfvalue[1]) {
+        $csrfvalue = $csrfcookie->getValue();
+        if ($decode[$claimname] === $csrfvalue) {
             return true;
         }
         return false;
     }
 
-    public function transformInputToAssocArray($decode) {
-        $isValideDecodedJson = json_decode($decode, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            error_log("Array was a json, succefully decoded");
-            $array = $isValideDecodedJson;
-            return $array;
+    /**
+     * Transform $decode to associative array
+     *
+     * @param $decode (json or object)
+     * @return array
+     */
+    public function transformDecodedToAssocArray($decode) {
+        //if(is_object($decode)) {return (array)$decode;}
+        if (is_string($decode)) {
+            $isValideDecodedJson = json_decode($decode, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return (array)$isValideDecodedJson;
+            }
         }
-        return $decode;
+        return (array)$decode;
     }
 
 
     /**
      * Set a custom path route (overwrite default)
      *
-     * @param string[] $path
+     * @param string[] or string $path
      * @return self
      */
     public function setPath($path){
@@ -219,7 +225,7 @@ class XsrfProtection {
     /**
      * Set a custom passthrough route (overwrite default)
      *
-     * @param string[] $passthrough
+     * @param string[] or string $passthrough
      * @return self
      */
     public function setPassthrough($passthrough){

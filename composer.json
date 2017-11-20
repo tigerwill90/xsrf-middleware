@@ -14,17 +14,33 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Sylvain",
-            "email": "sylvain.muller90@gmail.com"
+            "name": "Sylvain Muller",
+            "email": "sylvain.muller90@gmail.com",
+            "homepage": "http://www.sylvainmuller.ch"
         }
     ],
-    "minimum-stability": "dev",
+    "version":"1.0.0-beta",
+    "minimum-stability": "beta",
     "require": {
+      "php": "^5.5 || ^7.0",
       "dflydev/fig-cookies": "^1.0"
+    },
+    "require-dev": {
+      "php": "^7.1",
+      "slim/slim": "^3.0",
+      "firebase/php-jwt": "^3.0 || ^4.0 || ^5.0",
+      "tuupola/base62": "^0.8.0",
+      "tuupola/branca": "^0.3.0",
+      "phpunit/phpunit": "^6.4.4"
     },
     "autoload": {
     "psr-4": {
         "Tigerwill90\\Middleware\\": "src"
+      }
+    },
+    "autoload-dev": {
+      "psr-4": {
+        "Tigerwill90\\Middleware\\": "tests"
       }
     }
 }
