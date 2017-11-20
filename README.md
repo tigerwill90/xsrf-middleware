@@ -4,11 +4,11 @@ Csrf protection based on double submit pattern, cookie - JWT/Branca alternative.
 
 I am new to the php world and this is my first middleware,
 currently in developpement, for Slim 3 framework. This middleware is based on [PSR-7 JWT Authentication Middleware](https://github.com/tuupola/slim-jwt-auth) from
-[Tuupola](https://github.com/tuupola). **Actually, this middleware is designed to work with
+[Tuupola](https://github.com/tuupola). **Currently, this middleware is designed to work with
 JWT/Branca Authentication Middleware. It has been tested with [Slim Framework](https://www.slimframework.com/)**
 
 This middleware does **not** provide ways to generate Branca/JWT token. However you can find all you
-need for generate token with links bellow.
+needs for generate token with links bellow.
 
 * [Firebase/php-jwt](https://github.com/firebase/php-jwt)
 * [Tuupola/branca-php](https://github.com/tuupola/branca-php)
@@ -109,9 +109,9 @@ Default parameter is `xCsrf`
  #### Token
  
  According to [PSR-7 JWT Authentication Middleware](https://github.com/tuupola/slim-jwt-auth) documentation, when the token
- is decoded successfully and authentication succees, the contents of decoded token as saved as attribute
+ is decoded successfully and authentication succees, the contents of decoded token is saved as attribute
  to the `$request`. The optional `token` parameter allows you to specify the attribute name of JWT/Branca token
- that the middleware need to find in `$request`.
+ that the middleware needs to find in `$request`.
  
  Default parameter is `token`
   ```php
