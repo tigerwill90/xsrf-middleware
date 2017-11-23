@@ -1,4 +1,4 @@
-# slim3-xsrf-middleware
+# PSR-7 XSRF Protection for JWT/Branca Authentication token
 
 Csrf protection based on double submit pattern, cookie - JWT/Branca alternative.
 
@@ -192,9 +192,8 @@ phpunit
 ### Next Feature
 
 * Passing decoded token in parameter
-* Force `httponly` cookie
 * Errors messages
-* Support for PSR-3 compatible logger
+* PSR-3 logger
 
 ### License
 
