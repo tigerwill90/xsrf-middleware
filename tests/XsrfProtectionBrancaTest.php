@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * This file is part of xcsrf-middleware package
  *
@@ -7,8 +8,6 @@
  * Project home : https://github.com/tigerwill90/slim3-xsrf-middleware
  * License : MIT
  */
-
-declare(strict_types=1);
 
 namespace Tigerwill90\Middleware;
 
@@ -24,10 +23,10 @@ use Branca\Branca;
 use Dflydev\FigCookies\Cookie;
 use Dflydev\FigCookies\FigRequestCookies;
 
-const KEY = "supersecretkeyyoushouldnotcommit";
-const XSRF = "csrftoken";
-
 class XsrfProtectionBrancaTest extends \PHPUnit_Framework_TestCase  {
+
+    private const KEY = "supersecretkeyyoushouldnotcommit";
+    private const XSRF = "csrftoken";
 
     public function requestFactory() : Request {
 
@@ -46,15 +45,15 @@ class XsrfProtectionBrancaTest extends \PHPUnit_Framework_TestCase  {
         $request = $this->requestFactory();
         $response = new Response();
 
-        $branca = new Branca(KEY);
+        $branca = new Branca(self::KEY);
 
         $payload = [
             "uid" => 1,
-            "csrf" => XSRF,
+            "csrf" => self::XSRF,
             "scope" => [1,0,1,1]
         ];
 
-        $request = FigRequestCookies::set($request, Cookie::create('xCsrf', XSRF));
+        $request = FigRequestCookies::set($request, Cookie::create('xCsrf', self::XSRF));
 
         $encoded =  $branca->encode(json_encode($payload));
         $decoded =  $branca->decode($encoded);
@@ -80,10 +79,10 @@ class XsrfProtectionBrancaTest extends \PHPUnit_Framework_TestCase  {
         $request = $this->requestFactory();
         $response = new Response();
 
-        $branca = new Branca(KEY);
+        $branca = new Branca(self::KEY);
         $payload = [
             "uid" => 1,
-            "csrf" => XSRF,
+            "csrf" => self::XSRF,
             "scope" => [1,0,1,1]
         ];
 
@@ -112,14 +111,14 @@ class XsrfProtectionBrancaTest extends \PHPUnit_Framework_TestCase  {
         $request = $this->requestFactory();
         $response = new Response();
 
-        $branca = new Branca(KEY);
+        $branca = new Branca(self::KEY);
         $payload = [
             "uid" => 1,
-            "noRightClaim" => XSRF,
+            "noRightClaim" => self::XSRF,
             "scope" => [1,0,1,1]
         ];
 
-        $request = FigRequestCookies::set($request, Cookie::create('xCsrf', XSRF));
+        $request = FigRequestCookies::set($request, Cookie::create('xCsrf', self::XSRF));
 
         $encoded =  $branca->encode(json_encode($payload));
         $decoded =  $branca->decode($encoded);
@@ -144,10 +143,10 @@ class XsrfProtectionBrancaTest extends \PHPUnit_Framework_TestCase  {
         $request = $this->requestFactory();
         $response = new Response();
 
-        $branca = new Branca(KEY);
+        $branca = new Branca(self::KEY);
         $payload = "payloadshouldanassociativearray";
 
-        $request = FigRequestCookies::set($request, Cookie::create('xCsrf', XSRF));
+        $request = FigRequestCookies::set($request, Cookie::create('xCsrf', self::XSRF));
 
         $encoded =  $branca->encode($payload);
         $decoded =  $branca->decode($encoded);
@@ -172,14 +171,14 @@ class XsrfProtectionBrancaTest extends \PHPUnit_Framework_TestCase  {
         $request = $this->requestFactory();
         $response = new Response();
 
-        $branca = new Branca(KEY);
+        $branca = new Branca(self::KEY);
         $payload = [
             "uid" => 1,
-            "csrf" => XSRF,
+            "csrf" => self::XSRF,
             "scope" => [1,0,1,1]
         ];
 
-        $request = FigRequestCookies::set($request, Cookie::create('noRightCookieName', XSRF));
+        $request = FigRequestCookies::set($request, Cookie::create('noRightCookieName', self::XSRF));
 
         $encoded =  $branca->encode(json_encode($payload));
         $decoded =  $branca->decode($encoded);

@@ -192,9 +192,9 @@ phpunit
 ### Next Feature
 
 * Passing decoded token in parameter
-* Force `httponly` cookie
 * Errors messages
 * Support for PSR-3 compatible logger
+* Choose which token are in the `httpony` cookie
 
 ### License
 

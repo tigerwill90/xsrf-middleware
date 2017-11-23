@@ -8,8 +8,6 @@
  * License : MIT
  */
 
-declare(strict_types=1);
-
 namespace Tigerwill90\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -68,6 +66,7 @@ class XsrfProtection {
         foreach ((array)$this->options["path"] as $path) {
             $path = rtrim($path, "/");
             if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
+
                 // If cookie cannot be found, return 401 Unauthorized
                 if (false === $cookie = $this->fetchCookie($request,$cookiename)) {
                     return $response->withStatus(401);
@@ -294,7 +293,7 @@ class XsrfProtection {
     }
 
     /**
-     * get the claim name option
+     * Get the claim name option
      *
      * @return string
      */
