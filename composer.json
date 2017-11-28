@@ -19,7 +19,6 @@
             "homepage": "http://www.sylvainmuller.ch"
         }
     ],
-    "version":"1.0.0",
     "minimum-stability": "beta",
     "require": {
       "php": "^5.5 || ^7.0",
