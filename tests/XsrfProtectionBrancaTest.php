@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * This file is part of xcsrf-middleware package
  *
@@ -8,6 +7,8 @@ declare(strict_types=1);
  * Project home : https://github.com/tigerwill90/slim3-xsrf-middleware
  * License : MIT
  */
+
+declare(strict_types=1);
 
 namespace Tigerwill90\Middleware;
 
