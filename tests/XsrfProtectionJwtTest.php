@@ -40,6 +40,38 @@ class XsrfProtectionJwtTest extends \PHPUnit_Framework_TestCase {
 
      }
 
+     /** @test */
+    public function testAllShouldBeWorkWithPayloadAndReturn200() : void {
+        $request = $this->requestFactory();
+        $response = new Response();
+
+        $payload = [
+            "uid" => 1,
+            "csrf" => self::XSRF,
+            "scope" => [1,0,1,1]
+        ];
+
+        $request = FigRequestCookies::set($request, Cookie::create('xCsrf', self::XSRF));
+
+        $jwt = JWT::encode($payload, self::KEY, "HS256");
+        $decoded = JWT::decode($jwt, self::KEY, ["HS256", "HS512", "HS384"]);
+
+        $xsrfProtection = new XsrfProtection([
+            "payload" => $decoded
+        ]);
+
+        $next = function($request, $response) {
+            $response->getBody()->write("Foo");
+            return $response;
+        };
+
+
+        $response = $xsrfProtection($request,$response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+    }
+
     /** @test */
     public function testAsArrayShouldMatchAndReturn200() : void {
 

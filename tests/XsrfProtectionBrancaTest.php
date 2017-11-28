@@ -74,6 +74,39 @@ class XsrfProtectionBrancaTest extends \PHPUnit_Framework_TestCase  {
     }
 
     /** @test */
+    public function testAllShouldBeWorkWithPayloadAndReturn200() : void {
+        $request = $this->requestFactory();
+        $response = new Response();
+
+        $branca = new Branca(self::KEY);
+
+        $payload = [
+            "uid" => 1,
+            "csrf" => self::XSRF,
+            "scope" => [1,0,1,1]
+        ];
+
+        $request = FigRequestCookies::set($request, Cookie::create('xCsrf', self::XSRF));
+
+        $encoded =  $branca->encode(json_encode($payload));
+        $decoded =  $branca->decode($encoded);
+
+        $xsrfProtection = new XsrfProtection([
+            "payload" => $decoded
+        ]);
+
+        $next = function(Request $request, Response $response) {
+            $response->getBody()->write("Foo");
+            return $response;
+        };
+
+        $response = $xsrfProtection($request, $response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+    }
+
+    /** @test */
     public function testShouldNotMatchAndReturn401() : void {
 
         $request = $this->requestFactory();

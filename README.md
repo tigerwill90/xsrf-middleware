@@ -121,6 +121,18 @@ Default parameter is `xCsrf`
   ]));
   ```
  
+ #### Payload
+ 
+ **Alternatively** you can pass the contents of decoded token in the optional `payload` parameter.
+ 
+ Default value is `null`
+ `````php
+   $app->add(new Tigerwill90\Middleware\XsrfProtection([
+       "path" => ["/api", "/admin"],
+       "payload" => $container["decoded"]
+   ]));
+ `````
+ 
  #### Claim
  Beauty of JWT/Branca is that you can pass extra data in the token such roles, rights, etc... Therby, we can
  compare a specified claims with ``httponly`` cookie.
@@ -191,9 +203,9 @@ phpunit
 
 ### Next Feature
 
-* Passing decoded token in parameter
 * Errors messages
 * PSR-3 logger
+* Cookie/Jwt/Branca mode
 
 ### License
 

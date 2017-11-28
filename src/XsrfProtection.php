@@ -22,6 +22,7 @@ class XsrfProtection {
     private $options = [
         "path" => "/",
         "passthrough" => null,
+        "payload" => null,
         "cookie" => "xCsrf",
         "token" => "token",
         "claim" => "csrf"
@@ -72,18 +73,20 @@ class XsrfProtection {
                     return $response->withStatus(401);
                 }
 
-                // If token cannot be found, return 401 Unauthorized
-                if (false === $token = $this->fetchToken($request,$tokenname)) {
-                    return $response->withStatus(401);
+                // If payload is null and token cannot be found in request, return 401 Unauthorized
+                if(!isset($this->options["payload"])) {
+                    if (false === $token = $this->fetchToken($request,$tokenname)) {
+                        return $response->withStatus(401);
+                    }
                 }
 
                 // If claim cannot be found, return 401 Unauthorized
-                if (false === $claim = $this->fetchClaim($request,$tokenname,$claimname)) {
+                if (false === $claim = $this->fetchClaim($claimname)) {
                     return $response->withStatus(401);
                 }
 
                 // If csrf cookie don't match with claim, return 401 Unauthorized
-                if (false === $match = $this->validateToken($request,$cookiename,$tokenname,$claimname)) {
+                if (false === $match = $this->validateToken($request,$cookiename,$claimname)) {
                     return $response->withStatus(401);
                 }
             }
@@ -137,6 +140,7 @@ class XsrfProtection {
         if (!isset($decode)) {
             return false;
         }
+        $this->setPayload($decode);
         return true;
     }
 
@@ -148,9 +152,8 @@ class XsrfProtection {
      * @param name of the claim $claimname
      * @return boolean
      */
-    public function fetchClaim($request,$tokenname,$claimname) {
-        $decode = $request->getAttribute($tokenname);
-        $decode = $this->transformDecodedToAssocArray($decode);
+    public function fetchClaim($claimname) {
+        $decode = $this->getPayload();
         if(!is_array($decode)) {
             return false;
         }
@@ -172,9 +175,8 @@ class XsrfProtection {
      * @param name of the claim $claimname
      * @return boolean
      */
-    public function validateToken($request,$cookiename,$tokenname,$claimname) {
-        $decode = $request->getAttribute($tokenname);
-        $decode = $this->transformDecodedToAssocArray($decode);
+    public function validateToken($request,$cookiename,$claimname) {
+        $decode = $this->getPayload();
         $csrfcookie = FigRequestCookies::get($request, $cookiename);
         $csrfvalue = $csrfcookie->getValue();
         if ($decode[$claimname] === $csrfvalue) {
@@ -182,24 +184,6 @@ class XsrfProtection {
         }
         return false;
     }
-
-    /**
-     * Transform $decode to associative array
-     *
-     * @param $decode (json or object)
-     * @return array
-     */
-    public function transformDecodedToAssocArray($decode) {
-        //if(is_object($decode)) {return (array)$decode;}
-        if (is_string($decode)) {
-            $isValideDecodedJson = json_decode($decode, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                return (array)$isValideDecodedJson;
-            }
-        }
-        return (array)$decode;
-    }
-
 
     /**
      * Set a custom path route (overwrite default)
@@ -239,6 +223,32 @@ class XsrfProtection {
      */
     public function getPassthrough(){
         return $this->options["passthrough"];
+    }
+
+    /**
+     * Set payload given in parameter
+     *
+     * @param $payload
+     * @return $this
+     */
+    public function setPayload($payload) {
+        $this->options["payload"] = $payload;
+        return $this;
+    }
+
+    /**
+     * Get payload and if json, decode it
+     *
+     * @return array
+     */
+    public function getPayload() {
+        if (is_string($this->options["payload"])) {
+            $isValideDecodedJson = json_decode($this->options["payload"], true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return (array)$isValideDecodedJson;
+            }
+        }
+        return (array)$this->options["payload"];
     }
 
     /**
