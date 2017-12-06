@@ -1,9 +1,10 @@
-## 1.0.3
+## 1.0.3-release
 ##### 2017.12.05
 * Add support PSR-3 logger
 * Add error message
 * New sets of tests
 * Some code modification
+* Stable release
 
 ## 1.0.2-beta
 ##### 2017.11.28
