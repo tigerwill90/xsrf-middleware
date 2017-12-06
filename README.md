@@ -269,6 +269,7 @@ phpunit
 ### Next Feature
 
 * Ability to find JWT/Branca in cookie and match with request csrf parameter.
+* Csrf token strength test
 
 ### License
 
