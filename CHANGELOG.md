@@ -4,6 +4,7 @@
 * Add error message
 * New sets of tests
 * Some code modification
+* Stable release
 
 ## 1.0.2-beta
 ##### 2017.11.28
