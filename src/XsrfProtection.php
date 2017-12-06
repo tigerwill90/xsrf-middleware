@@ -10,8 +10,10 @@
 
 namespace Tigerwill90\Middleware;
 
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\RequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use Dflydev\FigCookies\FigRequestCookies;
 
 class XsrfProtection {
@@ -25,18 +27,27 @@ class XsrfProtection {
         "payload" => null,
         "cookie" => "xCsrf",
         "token" => "token",
-        "claim" => "csrf"
+        "claim" => "csrf",
+        "error" => null
     ];
+
+    /**
+     * PSR-3 compliant logger
+     */
+    protected $logger;
+
+    /**
+     * Last error message
+     */
+    protected $message;
 
     /**
      * Create a new middleware instance
      * @param array
      */
     public function __construct(array $options = []) {
-
         /* Store passed in options overwriting any defaults. */
         $this->setOptions($options);
-
     }
 
     /**
@@ -55,6 +66,7 @@ class XsrfProtection {
         foreach ((array)$this->options["passthrough"] as $passthrough) {
             $passthrough = rtrim($passthrough, "/");
             if (!!preg_match("@^{$passthrough}(/.*)?$@", $uri)) {
+                $this->log(LogLevel::INFO, "Route ignored, access granted");
                 return $next($request, $response);
             }
         }
@@ -70,24 +82,34 @@ class XsrfProtection {
 
                 // If cookie cannot be found, return 401 Unauthorized
                 if (false === $cookie = $this->fetchCookie($request,$cookiename)) {
-                    return $response->withStatus(401);
+                    return $this->error($request, $response, [
+                        "message" => $this->message
+                    ])->withStatus(401);
                 }
 
                 // If payload is null and token cannot be found in request, return 401 Unauthorized
                 if(!isset($this->options["payload"])) {
+                    $message = "Payload not found in parameter";
+                    $this->log(LogLevel::WARNING, $message);
                     if (false === $token = $this->fetchToken($request,$tokenname)) {
-                        return $response->withStatus(401);
+                        return $this->error($request, $response, [
+                            "message" => $this->message
+                        ])->withStatus(401);
                     }
                 }
 
                 // If claim cannot be found, return 401 Unauthorized
                 if (false === $claim = $this->fetchClaim($claimname)) {
-                    return $response->withStatus(401);
+                    return $this->error($request, $response, [
+                        "message" => $this->message
+                    ])->withStatus(401);
                 }
 
                 // If csrf cookie don't match with claim, return 401 Unauthorized
                 if (false === $match = $this->validateToken($request,$cookiename,$claimname)) {
-                    return $response->withStatus(401);
+                    return $this->error($request, $response, [
+                        "message" => $this->message
+                    ])->withStatus(401);
                 }
             }
         }
@@ -95,6 +117,23 @@ class XsrfProtection {
         return $next($request, $response);
     }
 
+    /**
+     * Call the error handler if it exists
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $arguments
+     * @return Response
+     */
+    public function error(Request $request, Response $response, $arguments) {
+        if (is_callable($this->options["error"])) {
+            $handler_response = $this->options["error"]($request, $response, $arguments);
+            if (is_a($handler_response, "\Psr\Http\Message\ResponseInterface")) {
+                return $handler_response;
+            }
+        }
+        return $response;
+    }
 
     /**
      * Set options from given array (overwrite defaults)
@@ -119,28 +158,34 @@ class XsrfProtection {
      * @param name of the cookie $cookiename
      * @return boolean
      */
-    public function fetchCookie($request,$cookiename) {
+    public function fetchCookie(Request $request,$cookiename) {
+        $message = "Cookie not found";
         $csrfcookie = FigRequestCookies::get($request, $cookiename);
         $csrfvalue = $csrfcookie->getValue();
         if (!isset($csrfvalue)) {
+            $this->message = $message;
+            $this->log(LogLevel::DEBUG, $message);
             return false;
         }
         return true;
     }
 
     /**
-     * Check if token exist
+     * Check if payload exist in request attribute
      *
      * @param \Psr\Http\Message\RequestInterface $request
      * @param name of the token $tokenname
      * @return boolean
      */
-    public function fetchToken($request,$tokenname) {
+    public function fetchToken(Request $request,$tokenname) {
+        $message = "Payload not found in request attribute";
         $decode = $request->getAttribute($tokenname);
         if (!isset($decode)) {
+            $this->message = $message;
+            $this->log(LogLevel::DEBUG, $message);
             return false;
         }
-        $this->setPayload($decode);
+        $this->options["payload"] = $decode;
         return true;
     }
 
@@ -153,16 +198,18 @@ class XsrfProtection {
      * @return boolean
      */
     public function fetchClaim($claimname) {
-        $decode = $this->getPayload();
-        if(!is_array($decode)) {
-            return false;
-        }
+        $decode = $this->transformPayload($this->options["payload"]);
         if (!array_key_exists($claimname,$decode)) {
+            $this->message = "Claim not found in token";
+            $this->log(LogLevel::DEBUG, $this->message);
             return false;
         }
-        if (!isset($decode[$claimname])) {
+        if (empty($decode[$claimname])) {
+            $this->message = "No random key find in claim";
+            $this->log(LogLevel::DEBUG, $this->message);
             return false;
         }
+
         return true;
     }
 
@@ -175,13 +222,17 @@ class XsrfProtection {
      * @param name of the claim $claimname
      * @return boolean
      */
-    public function validateToken($request,$cookiename,$claimname) {
-        $decode = $this->getPayload();
+    public function validateToken(Request $request,$cookiename,$claimname) {
+        $message = "Token and cookie don't match, access";
+        $decode = $this->transformPayload($this->options["payload"]);
         $csrfcookie = FigRequestCookies::get($request, $cookiename);
         $csrfvalue = $csrfcookie->getValue();
         if ($decode[$claimname] === $csrfvalue) {
+            $this->log(LogLevel::DEBUG, $message . " granted !");
             return true;
         }
+        $this->message = $message . " denied !";
+        $this->log(LogLevel::DEBUG, $message . " denied !");
         return false;
     }
 
@@ -237,13 +288,23 @@ class XsrfProtection {
     }
 
     /**
-     * Get payload and if json, decode it
+     * Get payload
      *
      * @return array
      */
     public function getPayload() {
-        if (is_string($this->options["payload"])) {
-            $isValideDecodedJson = json_decode($this->options["payload"], true);
+        return $this->options["payload"];
+    }
+
+    /**
+     * transform payload to valid array
+     *
+     * @param $payload
+     * @return array
+     */
+    public function transformPayload($payload) {
+        if (is_string($payload)) {
+            $isValideDecodedJson = json_decode($payload, true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 return (array)$isValideDecodedJson;
             }
@@ -309,5 +370,79 @@ class XsrfProtection {
      */
     public function getClaim(){
         return $this->options["claim"];
+    }
+
+    /**
+     * Set a custom PSR-3 compliant logger
+     *
+     * @param LoggerInterface|null $logger
+     * @return $this
+     */
+    public function setLogger(LoggerInterface $logger = null) {
+        $this->logger = $logger;
+        return $this;
+    }
+
+    /**
+     * Get PSR-3 compliant logger
+     *
+     * @return mixed
+     */
+    public function getLogger() {
+        return $this->logger;
+    }
+
+    /**
+     * Log messages with a PSR-3 compliant logger
+     *
+     * @param $level
+     * @param $message
+     * @param array $context
+     * @return mixed
+     */
+    public function log($level, $message, array $context = []) {
+        if ($this->logger) {
+            return $this->logger->log($level, $message, $context);
+        }
+    }
+
+    /**
+     * Set the last error message
+     *
+     * @param $message
+     * @return $this
+     */
+    public function setMessage($message) {
+        $this->message = $message;
+        return $this;
+    }
+
+    /**
+     * Get the last error message
+     *
+     * @return mixed
+     */
+    public function getMessage() {
+        return $this->message;
+    }
+
+    /**
+     * Set the error handler
+     *
+     * @param $error
+     * @return $this
+     */
+    public function setError($error) {
+        $this->options["error"] = $error;
+        return $this;
+    }
+
+    /**
+     * Get the error handler
+     *
+     * @return mixed
+     */
+    public function getError() {
+        return $this->options["error"];
     }
 }

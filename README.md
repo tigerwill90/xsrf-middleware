@@ -2,10 +2,10 @@
 
 Csrf protection based on double submit pattern, cookie - JWT/Branca alternative.
 
-I am new to the php world and this is my first middleware,
-currently in developpement, for Slim 3 framework. This middleware is based on [PSR-7 JWT Authentication Middleware](https://github.com/tuupola/slim-jwt-auth) from
-[Tuupola](https://github.com/tuupola). **Currently, this middleware is designed to work with
-JWT/Branca Authentication Middleware. It has been tested with [Slim Framework](https://www.slimframework.com/)**
+I am new to the php world and this is my first middleware.
+It is based on [PSR-7 JWT Authentication Middleware](https://github.com/tuupola/slim-jwt-auth) from
+[Tuupola](https://github.com/tuupola). **This middleware is designed to work with
+JWT/Branca Authentication method. It has been tested with [Slim Framework](https://www.slimframework.com/)**
 
 This middleware does **not** provide ways to generate Branca/JWT token. However you can find all you
 needs for generate token with links bellow.
@@ -83,6 +83,8 @@ It can be either a string or an array.
 
 Default parameter is `null`
 ```php
+$app = new Slim\App
+
 $app->add(new Tigerwill90\Middleware\XsrfProtection([
     "path" => ["/api", "/admin"],
     "passthrough" => "/api/orders"
@@ -97,6 +99,8 @@ The optional `cookie` parameter allow you to specify the name of your anti-csrf 
 
 Default parameter is `xCsrf`
  ```php
+ $app = new Slim\App
+ 
  $app->add(new Tigerwill90\Middleware\XsrfProtection([
      "path" => ["/api", "/admin"],
      "cookie" => "csrfcookie"
@@ -115,10 +119,12 @@ Default parameter is `xCsrf`
  
  Default parameter is `token`
   ```php
-  $app->add(new Tigerwill90\Middleware\XsrfProtection([
-      "path" => ["/api", "/admin"],
-      "token" => "jwt"
-  ]));
+$app = new Slim\App
+
+$app->add(new Tigerwill90\Middleware\XsrfProtection([
+  "path" => ["/api", "/admin"],
+  "token" => "jwt"
+]));
   ```
  
  #### Payload
@@ -127,10 +133,12 @@ Default parameter is `xCsrf`
  
  Default value is `null`
  `````php
-   $app->add(new Tigerwill90\Middleware\XsrfProtection([
-       "path" => ["/api", "/admin"],
-       "payload" => $container["decoded"]
-   ]));
+ $app = new Slim\App
+ 
+$app->add(new Tigerwill90\Middleware\XsrfProtection([
+   "path" => ["/api", "/admin"],
+   "payload" => $container["decoded"]
+]));
  `````
  
  #### Claim
@@ -153,16 +161,73 @@ Default parameter is `xCsrf`
  
  Default value is `csrf`
 ```php
-  $app->add(new Tigerwill90\Middleware\XsrfProtection([
-      "path" => ["/api", "/admin"],
-      "claim" => "xsrf"
-  ]));
+$app = new Slim\App
+
+$app->add(new Tigerwill90\Middleware\XsrfProtection([
+  "path" => ["/api", "/admin"],
+  "claim" => "xsrf"
+]));
 ```
 
 According to this example, when a request is send to your api, you should have in the header a 
 `httponly` cookie and an `authorization` token who have both `thepseudorandomvaluegeneratedforbothcookieandtoken`
 setted as value.
 
+#### Logger
+
+The optional `logger` parameter allows you to pass a PSR-3 compatible logger to deal with debugging.
+
+````php
+use Monolog\Logger;
+use Monolog\Handler\RotatingFileHandler;
+use Monolog\Formatter\LineFormatter;
+
+$app = new Slim\App
+
+$logger = new Logger("slim");
+$formatter = new LineFormatter(
+    "[%datetime%] [%level_name%]: %message% %context%\n",
+    null,
+    true,
+    true
+);
+
+$rotating = new RotatingFileHandler(__DIR__ . "/logs/xsrf.log", 0, Logger::DEBUG);
+$rotating->setFormatter($formatter);
+$logger->pushHandler($rotating);
+
+$app->add(new Tigerwill90\Middleware\XsrfProtection([
+  "path" => ["/api", "/admin"],
+  "claim" => "xsrf",
+  "logger" => $logger
+]));
+````
+
+In this example we pass an instance of [Logger](https://github.com/projek-xyz/slim-monolog) `$logger` to the middleware.
+
+````
+[2017-12-06 01:14:05] [WARNING]: Payload not found in parameter 
+[2017-12-06 01:14:05] [DEBUG]: Token and cookie don't match, access denied ! 
+````
+
+#### Error
+
+Error is called when access is denied. It receives last error message in arguments.
+
+````php
+$app = new Slim\App
+
+$app->add(new Tigerwill90\Middleware\XsrfProtection([
+  "path" => ["/api", "/admin"],
+  "claim" => "xsrf",
+  "error" => function ($request, $response, $arguments) {
+       $data["message"] = $arguments["message];
+       return $response
+                ->withHeader("Content-Type", "application/json")
+                ->write(json_encode($data));
+  }
+]));
+````
 
 ### Implementation with JWT/Branca Authentication Middleware
 
@@ -203,9 +268,7 @@ phpunit
 
 ### Next Feature
 
-* Errors messages
-* PSR-3 logger
-* Cookie/Jwt/Branca mode
+* Ability to find JWT/Branca in cookie and match with request csrf parameter.
 
 ### License
 
