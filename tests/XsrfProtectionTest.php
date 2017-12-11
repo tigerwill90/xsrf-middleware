@@ -8,8 +8,6 @@
  * License : MIT
  */
 
-declare(strict_types=1);
-
 namespace Tigerwill90\Middleware;
 
 use Slim\Http\Request;
@@ -30,7 +28,6 @@ use Dflydev\FigCookies\FigRequestCookies;
 
 class XsrfProtectionTest extends \PHPUnit_Framework_TestCase {
 
-    private const KEY = "supersecretkeyyoushouldnotcommit";
     private const XSRF = "csrftoken";
 
     public function requestFactory() : Request {

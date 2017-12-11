@@ -71,17 +71,13 @@ class XsrfProtection {
             }
         }
 
-        $cookiename = $this->getCookie();
-        $tokenname = $this->getToken();
-        $claimname = $this->getClaim();
-
         // if request match with path, double submit check
         foreach ((array)$this->options["path"] as $path) {
             $path = rtrim($path, "/");
             if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
 
                 // If cookie cannot be found, return 401 Unauthorized
-                if (false === $cookie = $this->fetchCookie($request,$cookiename)) {
+                if (null === $cookievalue = $this->fetchCookie($request)) {
                     return $this->error($request, $response, [
                         "message" => $this->message
                     ])->withStatus(401);
@@ -89,9 +85,9 @@ class XsrfProtection {
 
                 // If payload is null and token cannot be found in request, return 401 Unauthorized
                 if(!isset($this->options["payload"])) {
-                    $message = "Payload not found in parameter";
+                    $message = "Payload not found in options";
                     $this->log(LogLevel::WARNING, $message);
-                    if (false === $token = $this->fetchToken($request,$tokenname)) {
+                    if (false === $this->fetchToken($request)) {
                         return $this->error($request, $response, [
                             "message" => $this->message
                         ])->withStatus(401);
@@ -99,14 +95,14 @@ class XsrfProtection {
                 }
 
                 // If claim cannot be found, return 401 Unauthorized
-                if (false === $claim = $this->fetchClaim($claimname)) {
+                if (false === $this->fetchClaim()) {
                     return $this->error($request, $response, [
                         "message" => $this->message
                     ])->withStatus(401);
                 }
 
                 // If csrf cookie don't match with claim, return 401 Unauthorized
-                if (false === $match = $this->validateToken($request,$cookiename,$claimname)) {
+                if (false === $this->validateToken($cookievalue)) {
                     return $this->error($request, $response, [
                         "message" => $this->message
                     ])->withStatus(401);
@@ -154,32 +150,30 @@ class XsrfProtection {
     /**
      * Check if cookie exist
      *
-     * @param \Psr\Http\Message\RequestInterface $request
-     * @param name of the cookie $cookiename
-     * @return boolean
+     * @param Request $request
+     * @return null|string
      */
-    public function fetchCookie(Request $request,$cookiename) {
+    public function fetchCookie(Request $request) {
         $message = "Cookie not found";
-        $csrfcookie = FigRequestCookies::get($request, $cookiename);
+        $csrfcookie = FigRequestCookies::get($request, $this->options["cookie"]);
         $csrfvalue = $csrfcookie->getValue();
         if (!isset($csrfvalue)) {
             $this->message = $message;
             $this->log(LogLevel::DEBUG, $message);
-            return false;
+            return null;
         }
-        return true;
+        return $csrfvalue;
     }
 
     /**
      * Check if payload exist in request attribute
      *
-     * @param \Psr\Http\Message\RequestInterface $request
-     * @param name of the token $tokenname
-     * @return boolean
+     * @param Request $request
+     * @return bool
      */
-    public function fetchToken(Request $request,$tokenname) {
+    public function fetchToken(Request $request) {
         $message = "Payload not found in request attribute";
-        $decode = $request->getAttribute($tokenname);
+        $decode = $request->getAttribute($this->options["token"]);
         if (!isset($decode)) {
             $this->message = $message;
             $this->log(LogLevel::DEBUG, $message);
@@ -192,19 +186,16 @@ class XsrfProtection {
     /**
      * Check if claim exist
      *
-     * @param \Psr\Http\Message\RequestInterface $request
-     * @param name of the token $tokenname
-     * @param name of the claim $claimname
-     * @return boolean
+     * @return bool
      */
-    public function fetchClaim($claimname) {
+    public function fetchClaim() {
         $decode = $this->transformPayload($this->options["payload"]);
-        if (!array_key_exists($claimname,$decode)) {
+        if (!array_key_exists($this->options["claim"],$decode)) {
             $this->message = "Claim not found in token";
             $this->log(LogLevel::DEBUG, $this->message);
             return false;
         }
-        if (empty($decode[$claimname])) {
+        if (empty($decode[$this->options["claim"]])) {
             $this->message = "No random key find in claim";
             $this->log(LogLevel::DEBUG, $this->message);
             return false;
@@ -216,18 +207,13 @@ class XsrfProtection {
     /**
      * Check if cookie value match with jwt claim value
      *
-     * @param \Psr\Http\Message\RequestInterface $request
-     * @param name of the cookie $cookiename
-     * @param name of the token $tokenname
-     * @param name of the claim $claimname
-     * @return boolean
+     * @param $cookievalue
+     * @return bool
      */
-    public function validateToken(Request $request,$cookiename,$claimname) {
+    public function validateToken($cookievalue) {
         $message = "Token and cookie don't match, access";
         $decode = $this->transformPayload($this->options["payload"]);
-        $csrfcookie = FigRequestCookies::get($request, $cookiename);
-        $csrfvalue = $csrfcookie->getValue();
-        if ($decode[$claimname] === $csrfvalue) {
+        if ($decode[$this->options["claim"]] === $cookievalue) {
             $this->log(LogLevel::DEBUG, $message . " granted !");
             return true;
         }
