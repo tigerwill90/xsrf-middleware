@@ -211,14 +211,14 @@ class XsrfProtection {
      * @return bool
      */
     public function validateToken($cookievalue) {
-        $message = "Token and cookie don't match, access";
+        $message = "Token and cookie ";
         $decode = $this->transformPayload($this->options["payload"]);
         if ($decode[$this->options["claim"]] === $cookievalue) {
-            $this->log(LogLevel::DEBUG, $message . " granted !");
+            $this->log(LogLevel::DEBUG, $message . "match, access granted !");
             return true;
         }
-        $this->message = $message . " denied !";
-        $this->log(LogLevel::DEBUG, $message . " denied !");
+        $this->message = $message . "don't match, access denied !";
+        $this->log(LogLevel::DEBUG, $message . "don't match, access denied !");
         return false;
     }
 
