@@ -26,7 +26,9 @@ use Monolog\Formatter\LineFormatter;
 use Dflydev\FigCookies\Cookie;
 use Dflydev\FigCookies\FigRequestCookies;
 
-class XsrfProtectionTest extends \PHPUnit_Framework_TestCase {
+use PHPUnit\Framework\TestCase;
+
+final class XsrfProtectionTest extends TestCase {
 
     private const XSRF = "csrftoken";
 
