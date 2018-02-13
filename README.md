@@ -1,11 +1,11 @@
-# PSR-7 XSRF Protection for JWT/Branca Authentication token
+# PSR-7 & PSR-15 : CSRF Protection alternative for JWT/Branca Authentication token
 
 Csrf protection based on double submit pattern, cookie - JWT/Branca alternative.
 
 I am new to the php world and this is my first middleware.
 It is based on [PSR-7 JWT Authentication Middleware](https://github.com/tuupola/slim-jwt-auth) from
 [Tuupola](https://github.com/tuupola). **This middleware is designed to work with
-JWT/Branca Authentication method. It has been tested with [Slim Framework](https://www.slimframework.com/)**
+JWT/Branca Authentication method and can be used with any framework using PSR-7 or PSR-15 style middlewares (since v1.1.0). It has been tested with [Slim Framework](https://www.slimframework.com/)**.
 
 This middleware does **not** provide ways to generate Branca/JWT token. However you can find all you
 needs for generate token with links bellow.
@@ -40,6 +40,10 @@ The middleware inspect both token and cookie to check if value match.
 ### Dependencies
 
 * [dflydev-fig-cookies](https://github.com/dflydev/dflydev-fig-cookies)
+* [tuupola/callable-handler](https://github.com/tuupola/callable-handler)
+* [tuupola/http-factory](https://github.com/tuupola/http-factory)
+* php-fig standards
+
 
 ### Install
 
@@ -220,7 +224,7 @@ $app = new Slim\App
 $app->add(new Tigerwill90\Middleware\XsrfProtection([
   "path" => ["/api", "/admin"],
   "claim" => "xsrf",
-  "error" => function ($request, $response, $arguments) {
+  "error" => function ($response, $arguments) {
        $data["message"] = $arguments["message];
        return $response
                 ->withHeader("Content-Type", "application/json")

@@ -1,5 +1,5 @@
 ## 1.1.0
-##### 2018.02.13-test
+##### 2018.02.13
 * Refactor to PHP 7.1
 * PSR-7 and PSR-15 support
 * Minor improvement

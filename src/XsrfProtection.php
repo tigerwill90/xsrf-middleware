@@ -24,6 +24,7 @@ use Tuupola\Middleware\DoublePassTrait;
 final class XsrfProtection implements MiddlewareInterface {
 
     use DoublePassTrait;
+    
     /**
      * Default options can be overridden
      */
