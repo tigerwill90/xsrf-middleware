@@ -509,17 +509,16 @@ final class XsrfProtectionTest extends TestCase {
     /** @test */
     public function testShouldGetAndSetPath() : void {
         $xsrfProtection = new XsrfProtection([]);
-        $this->assertEquals("/",$xsrfProtection->getPath());
+        $this->assertEquals(["/"],$xsrfProtection->getPath());
         $xsrfProtection->setPath("/api");
-        $this->assertEquals("/api",$xsrfProtection->getPath());
+        $this->assertEquals(["/api"],$xsrfProtection->getPath());
     }
 
     /** @test */
     public function testShouldGetAndSetPassthrough() : void {
         $xsrfProtection = new XsrfProtection([]);
-        $this->assertNull($xsrfProtection->getPassthrough());
         $xsrfProtection->setPassthrough("/api");
-        $this->assertEquals("/api",$xsrfProtection->getPassthrough());
+        $this->assertEquals(["/api"],$xsrfProtection->getPassthrough());
     }
 
     /** @test */
@@ -564,7 +563,6 @@ final class XsrfProtectionTest extends TestCase {
     /** @test */
     public function testShouldGetAndSetError() : void {
         $xsrfProtection = new XsrfProtection([]);
-        $this->assertNull($xsrfProtection->getError());
         $error = function(){$x = 1; $y = 2; return $x + $y;};
         $xsrfProtection->setError($error);
         $this->assertEquals($error,$xsrfProtection->getError());
@@ -573,7 +571,6 @@ final class XsrfProtectionTest extends TestCase {
     /** @test */
     public function testShouldGetAndSetMessage() : void {
         $xsrfProtection = new XsrfProtection([]);
-        $this->assertNull($xsrfProtection->getMessage());
         $xsrfProtection->setMessage("Token not found");
         $this->assertEquals("Token not found",$xsrfProtection->getMessage());
     }

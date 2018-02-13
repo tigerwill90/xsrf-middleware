@@ -15,8 +15,9 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Dflydev\FigCookies\FigRequestCookies;
+use Closure;
 
-class XsrfProtection {
+final class XsrfProtection {
 
     /**
      * Default options can be overridden
@@ -58,7 +59,7 @@ class XsrfProtection {
      * @param callable $next
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function __invoke(Request $request, Response $response, callable $next) {
+    public function __invoke(Request $request, Response $response, callable $next) : Response {
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);
 
@@ -121,8 +122,8 @@ class XsrfProtection {
      * @param $arguments
      * @return Response
      */
-    public function error(Request $request, Response $response, $arguments) {
-        if (is_callable($this->options["error"])) {
+    public function error(Request $request, Response $response, $arguments) : Response {
+        if (\is_callable($this->options["error"])) {
             $handler_response = $this->options["error"]($request, $response, $arguments);
             if (is_a($handler_response, "\Psr\Http\Message\ResponseInterface")) {
                 return $handler_response;
@@ -137,11 +138,11 @@ class XsrfProtection {
      * @param array $data Array of options.
      * @return self
      */
-    private function setOptions(array $data = []) {
+    private function setOptions(array $data = []) : self {
         foreach ($data as $key => $value) {
             $method = "set" . ucfirst($key);
             if (method_exists($this, $method)) {
-                call_user_func(array($this, $method), $value);
+                \call_user_func(array($this, $method), $value);
             }
         }
         return $this;
@@ -153,7 +154,7 @@ class XsrfProtection {
      * @param Request $request
      * @return null|string
      */
-    public function fetchCookie(Request $request) {
+    public function fetchCookie(Request $request) : ?string {
         $message = "Cookie not found";
         $csrfcookie = FigRequestCookies::get($request, $this->options["cookie"]);
         $csrfvalue = $csrfcookie->getValue();
@@ -171,7 +172,7 @@ class XsrfProtection {
      * @param Request $request
      * @return bool
      */
-    public function fetchToken(Request $request) {
+    public function fetchToken(Request $request) : bool {
         $message = "Payload not found in request attribute";
         $decode = $request->getAttribute($this->options["token"]);
         if (!isset($decode)) {
@@ -188,7 +189,7 @@ class XsrfProtection {
      *
      * @return bool
      */
-    public function fetchClaim() {
+    public function fetchClaim() : bool {
         $decode = $this->transformPayload($this->options["payload"]);
         if (!array_key_exists($this->options["claim"],$decode)) {
             $this->message = "Claim not found in token";
@@ -210,7 +211,7 @@ class XsrfProtection {
      * @param $cookievalue
      * @return bool
      */
-    public function validateToken($cookievalue) {
+    public function validateToken(string $cookievalue) : bool {
         $message = "Token and cookie ";
         $decode = $this->transformPayload($this->options["payload"]);
         if ($decode[$this->options["claim"]] === $cookievalue) {
@@ -228,7 +229,7 @@ class XsrfProtection {
      * @param string[] or string $path
      * @return self
      */
-    public function setPath($path){
+    public function setPath($path) : self {
         $this->options["path"] = $path;
         return $this;
     }
@@ -236,10 +237,10 @@ class XsrfProtection {
     /**
      * get the path route option
      *
-     * @return string
+     * @return array
      */
-    public function getPath(){
-        return $this->options["path"];
+    public function getPath() : array {
+        return (array)$this->options["path"];
     }
 
     /**
@@ -248,7 +249,7 @@ class XsrfProtection {
      * @param string[] or string $passthrough
      * @return self
      */
-    public function setPassthrough($passthrough){
+    public function setPassthrough($passthrough) : self {
         $this->options["passthrough"] = $passthrough;
         return $this;
     }
@@ -258,8 +259,8 @@ class XsrfProtection {
      *
      * @return string
      */
-    public function getPassthrough(){
-        return $this->options["passthrough"];
+    public function getPassthrough() : array {
+        return (array)$this->options["passthrough"];
     }
 
     /**
@@ -268,7 +269,7 @@ class XsrfProtection {
      * @param $payload
      * @return $this
      */
-    public function setPayload($payload) {
+    public function setPayload($payload) : self {
         $this->options["payload"] = $payload;
         return $this;
     }
@@ -278,8 +279,8 @@ class XsrfProtection {
      *
      * @return array
      */
-    public function getPayload() {
-        return $this->options["payload"];
+    public function getPayload() : array {
+        return $this->transformPayload($this->options["payload"]);
     }
 
     /**
@@ -288,8 +289,8 @@ class XsrfProtection {
      * @param $payload
      * @return array
      */
-    public function transformPayload($payload) {
-        if (is_string($payload)) {
+    public function transformPayload($payload) : array {
+        if (\is_string($payload)) {
             $isValideDecodedJson = json_decode($payload, true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 return (array)$isValideDecodedJson;
@@ -304,7 +305,7 @@ class XsrfProtection {
      * @param string $cookie
      * @return self
      */
-    public function setCookie($cookie){
+    public function setCookie(string $cookie) : self {
         $this->options["cookie"] = $cookie;
         return $this;
     }
@@ -314,7 +315,7 @@ class XsrfProtection {
      *
      * @return string
      */
-    public function getCookie(){
+    public function getCookie() : string {
         return $this->options["cookie"];
     }
 
@@ -324,7 +325,7 @@ class XsrfProtection {
      * @param string $token
      * @return self
      */
-    public function setToken($token){
+    public function setToken(string $token) : self {
         $this->options["token"] = $token;
         return $this;
     }
@@ -334,7 +335,7 @@ class XsrfProtection {
      *
      * @return string
      */
-    public function getToken(){
+    public function getToken() : string {
         return $this->options["token"];
     }
 
@@ -344,7 +345,7 @@ class XsrfProtection {
      * @param string $claim
      * @return self
      */
-    public function setClaim($claim){
+    public function setClaim(string $claim) : self {
         $this->options["claim"] = $claim;
         return $this;
     }
@@ -354,7 +355,7 @@ class XsrfProtection {
      *
      * @return string
      */
-    public function getClaim(){
+    public function getClaim() : string {
         return $this->options["claim"];
     }
 
@@ -364,7 +365,7 @@ class XsrfProtection {
      * @param LoggerInterface|null $logger
      * @return $this
      */
-    public function setLogger(LoggerInterface $logger = null) {
+    public function setLogger(LoggerInterface $logger = null) : self {
         $this->logger = $logger;
         return $this;
     }
@@ -374,7 +375,7 @@ class XsrfProtection {
      *
      * @return mixed
      */
-    public function getLogger() {
+    public function getLogger() : LoggerInterface {
         return $this->logger;
     }
 
@@ -386,10 +387,11 @@ class XsrfProtection {
      * @param array $context
      * @return mixed
      */
-    public function log($level, $message, array $context = []) {
+    public function log($level, $message, array $context = []) : ?bool {
         if ($this->logger) {
             return $this->logger->log($level, $message, $context);
         }
+        return false;
     }
 
     /**
@@ -398,7 +400,7 @@ class XsrfProtection {
      * @param $message
      * @return $this
      */
-    public function setMessage($message) {
+    public function setMessage(string $message) : self {
         $this->message = $message;
         return $this;
     }
@@ -408,7 +410,7 @@ class XsrfProtection {
      *
      * @return mixed
      */
-    public function getMessage() {
+    public function getMessage() : string {
         return $this->message;
     }
 
@@ -418,7 +420,7 @@ class XsrfProtection {
      * @param $error
      * @return $this
      */
-    public function setError($error) {
+    public function setError(Closure $error) : self {
         $this->options["error"] = $error;
         return $this;
     }
@@ -428,7 +430,7 @@ class XsrfProtection {
      *
      * @return mixed
      */
-    public function getError() {
+    public function getError() : Closure {
         return $this->options["error"];
     }
 }
