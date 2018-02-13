@@ -10,15 +10,20 @@
 
 namespace Tigerwill90\Middleware;
 
-use Psr\Http\Message\RequestInterface as Request;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Dflydev\FigCookies\FigRequestCookies;
 use Closure;
+use Tuupola\Http\Factory\ResponseFactory;
+use Tuupola\Middleware\DoublePassTrait;
 
-final class XsrfProtection {
+final class XsrfProtection implements MiddlewareInterface {
 
+    use DoublePassTrait;
     /**
      * Default options can be overridden
      */
@@ -52,14 +57,13 @@ final class XsrfProtection {
     }
 
     /**
-     * Call the middleware
+     * Process a request in PSR-15 style
      *
-     * @param \Psr\Http\Message\RequestInterface $request
-     * @param \Psr\Http\Message\ResponseInterface $response
-     * @param callable $next
+     * @param Request $request
+     * @param RequestHandlerInterface $handler
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function __invoke(Request $request, Response $response, callable $next) : Response {
+    public function process(Request $request, RequestHandlerInterface $handler) : Response {
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);
 
@@ -68,7 +72,7 @@ final class XsrfProtection {
             $passthrough = rtrim($passthrough, "/");
             if (!!preg_match("@^{$passthrough}(/.*)?$@", $uri)) {
                 $this->log(LogLevel::INFO, "Route ignored, access granted");
-                return $next($request, $response);
+                return $handler->handle($request);
             }
         }
 
@@ -79,9 +83,10 @@ final class XsrfProtection {
 
                 // If cookie cannot be found, return 401 Unauthorized
                 if (null === $cookievalue = $this->fetchCookie($request)) {
-                    return $this->error($request, $response, [
+                    $response = (new ResponseFactory)->createResponse(401);
+                    return $this->error($response, [
                         "message" => $this->message
-                    ])->withStatus(401);
+                    ]);
                 }
 
                 // If payload is null and token cannot be found in request, return 401 Unauthorized
@@ -89,44 +94,46 @@ final class XsrfProtection {
                     $message = "Payload not found in options";
                     $this->log(LogLevel::WARNING, $message);
                     if (false === $this->fetchToken($request)) {
-                        return $this->error($request, $response, [
+                        $response = (new ResponseFactory)->createResponse(401);
+                        return $this->error($response, [
                             "message" => $this->message
-                        ])->withStatus(401);
+                        ]);
                     }
                 }
 
                 // If claim cannot be found, return 401 Unauthorized
                 if (false === $this->fetchClaim()) {
-                    return $this->error($request, $response, [
+                    $response = (new ResponseFactory)->createResponse(401);
+                    return $this->error($response, [
                         "message" => $this->message
-                    ])->withStatus(401);
+                    ]);
                 }
 
                 // If csrf cookie don't match with claim, return 401 Unauthorized
                 if (false === $this->validateToken($cookievalue)) {
-                    return $this->error($request, $response, [
+                    $response = (new ResponseFactory)->createResponse(401);
+                    return $this->error($response, [
                         "message" => $this->message
-                    ])->withStatus(401);
+                    ]);
                 }
             }
         }
 
-        return $next($request, $response);
+        return $handler->handle($request);
     }
 
     /**
      * Call the error handler if it exists
      *
-     * @param Request $request
      * @param Response $response
-     * @param $arguments
+     * @param array $arguments
      * @return Response
      */
-    public function error(Request $request, Response $response, $arguments) : Response {
+    private function error(Response $response, array $arguments) : Response {
         if (\is_callable($this->options["error"])) {
-            $handler_response = $this->options["error"]($request, $response, $arguments);
-            if (is_a($handler_response, "\Psr\Http\Message\ResponseInterface")) {
-                return $handler_response;
+            $handlerResponse = $this->options["error"]($response, $arguments);
+            if ($handlerResponse instanceof Response) {
+                return $handlerResponse;
             }
         }
         return $response;

@@ -1,3 +1,9 @@
+## 1.1.0
+##### 2018.02.13-test
+* Refactor to PHP 7.1
+* PSR-7 and PSR-15 support
+* Minor improvement
+
 ## 1.0.3-release
 ##### 2017.12.05
 * Add support PSR-3 logger

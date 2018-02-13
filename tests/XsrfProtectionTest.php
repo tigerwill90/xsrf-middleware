@@ -57,7 +57,6 @@ final class XsrfProtectionTest extends TestCase {
         return $logger;
     }
 
-    /** @test */
     public function testShouldReturn200WithIgnoredRoute() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -80,7 +79,6 @@ final class XsrfProtectionTest extends TestCase {
 
     }
 
-     /** @test */
     public function testShouldReturn200WithPayloadSetAsParameter() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -109,7 +107,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals("Foo", $response->getBody());
     }
 
-    /** @test */
     public function testShouldReturn200WithPayloadSetAsRequestAttribute() : void {
 
         $request = $this->requestFactory();
@@ -139,7 +136,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals("Foo", $response->getBody());
     }
 
-    /** @test */
     public function testShouldReturn200WithJsonEncodedPayload() : void{
         $request = $this->requestFactory();
         $response = new Response();
@@ -168,7 +164,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals("Foo", $response->getBody());
     }
 
-    /** @test */
     public function testShouldReturn401WithoutRightCookieValue() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -199,7 +194,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(401, $response->getStatusCode());
     }
 
-    /** @test */
     public function testShouldReturn401WithoutRightClaimValue() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -230,7 +224,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(401, $response->getStatusCode());
     }
 
-    /** @test */
     public function testShouldReturn401WithoutRightClaim() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -261,7 +254,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(401, $response->getStatusCode());
     }
 
-    /** @test */
     public function testShouldReturn401WithoutClaim() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -291,7 +283,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(401, $response->getStatusCode());
     }
 
-    /** @test */
     public function testShouldReturn401WithoutValueInClaim() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -322,7 +313,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(401, $response->getStatusCode());
     }
 
-    /** @test */
     public function testShouldReturn401WithStringPayload() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -349,7 +339,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(401, $response->getStatusCode());
     }
 
-    /** @test */
     public function testShouldReturn401WithoutPayloadInAttribute() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -372,7 +361,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(401, $response->getStatusCode());
     }
 
-    /** @test */
     public function testShouldReturn401WithoutRightCookieName() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -403,7 +391,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(401, $response->getStatusCode());
     }
 
-    /** @test */
     public function testShouldReturn401WithoutCookie() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -432,7 +419,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(401, $response->getStatusCode());
     }
 
-    /** @test */
     public function testShouldReturn40AndCallError() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -451,7 +437,7 @@ final class XsrfProtectionTest extends TestCase {
         $test = false;
         $xsrfProtection = new XsrfProtection([
             "logger" => $logger,
-            "error" => function($request, $response, $arguments) use (&$test) {
+            "error" => function($response, $arguments) use (&$test) {
                 $test = true;
             }
         ]);
@@ -468,7 +454,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertTrue($test);
     }
 
-    /** @test */
     public function testShouldReturn401CallErrorAndModifyBody() : void {
         $request = $this->requestFactory();
         $response = new Response();
@@ -486,7 +471,7 @@ final class XsrfProtectionTest extends TestCase {
         $test = false;
         $xsrfProtection = new XsrfProtection([
             "logger" => $logger,
-            "error" => function($request,$response, $arguments) use (&$test) {
+            "error" => function($response, $arguments) use (&$test) {
                 $test = true;
                 $response->getBody()->write($arguments["message"]);
                 return $response;
@@ -506,7 +491,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals("Cookie not found", $response->getBody());
     }
 
-    /** @test */
     public function testShouldGetAndSetPath() : void {
         $xsrfProtection = new XsrfProtection([]);
         $this->assertEquals(["/"],$xsrfProtection->getPath());
@@ -514,14 +498,12 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(["/api"],$xsrfProtection->getPath());
     }
 
-    /** @test */
     public function testShouldGetAndSetPassthrough() : void {
         $xsrfProtection = new XsrfProtection([]);
         $xsrfProtection->setPassthrough("/api");
         $this->assertEquals(["/api"],$xsrfProtection->getPassthrough());
     }
 
-    /** @test */
     public function testShouldGetAndSetPayload() : void {
         $payload = ["uid" => 1, "name" => "John Doe"];
         $xsrfProtection = new XsrfProtection([]);
@@ -529,14 +511,12 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals($payload,$xsrfProtection->getPayload());
     }
 
-    /** @test */
     public function testShouldTransformPayload() : void {
         $payload = ["uid" => 1, "name" => "John Doe"];
         $xsrfProtection = new XsrfProtection([]);
         $this->assertEquals($payload,$xsrfProtection->transformPayload(json_encode($payload)));
     }
 
-    /** @test */
     public function testShouldGetAndSetCookie() : void {
         $xsrfProtection = new XsrfProtection([]);
         $this->assertEquals("xCsrf",$xsrfProtection->getCookie());
@@ -544,7 +524,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals("dummyCookie",$xsrfProtection->getCookie());
     }
 
-    /** @test */
     public function testShouldGetAndSetToken() : void {
         $xsrfProtection = new XsrfProtection([]);
         $this->assertEquals("token",$xsrfProtection->getToken());
@@ -552,7 +531,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals("dummyToken",$xsrfProtection->getToken());
     }
 
-    /** @test */
     public function testShouldGetAndSetClaim() : void {
         $xsrfProtection = new XsrfProtection([]);
         $this->assertEquals("csrf",$xsrfProtection->getClaim());
@@ -560,7 +538,6 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals("dummyClaim",$xsrfProtection->getClaim());
     }
 
-    /** @test */
     public function testShouldGetAndSetError() : void {
         $xsrfProtection = new XsrfProtection([]);
         $error = function(){$x = 1; $y = 2; return $x + $y;};
@@ -568,14 +545,12 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals($error,$xsrfProtection->getError());
     }
 
-    /** @test */
     public function testShouldGetAndSetMessage() : void {
         $xsrfProtection = new XsrfProtection([]);
         $xsrfProtection->setMessage("Token not found");
         $this->assertEquals("Token not found",$xsrfProtection->getMessage());
     }
 
-    /** @test */
     public function testShouldSetAndGetLogger() : void {
         $xsrfProtection = new XsrfProtection([]);
         $logger = new NullLogger;
