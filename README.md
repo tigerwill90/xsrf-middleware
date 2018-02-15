@@ -1,5 +1,7 @@
-[![packagist 1.1.0](https://img.shields.io/badge/packagist-1.1.0-blue.svg)](https://packagist.org/packages/tigerwill90/xsrf-middleware)
+[![Latest Version](https://img.shields.io/packagist/v/tigerwill90/xsrf-middleware.svg?style=flat-square)](https://packagist.org/packages/tigerwill90/xsrf-middleware)
 [![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE.md)
+[![Build Status](https://travis-ci.org/tigerwill90/xsrf-middleware.svg?branch=master)](https://travis-ci.org/tigerwill90/xsrf-middleware)
+
 
 # PSR-7 & PSR-15 : CSRF Protection alternative for JWT/Branca Authentication token
 
@@ -38,7 +40,7 @@ When a user try to access ressource
 * Attach JWT/Branca token to header request (cookies will be automatically attached)
 * Send request
 
-The middleware inspect both token and cookie to check if value match.
+When you perform an unsafe operation `[POST | PUT | PATCH | DELETE]` to you api, the middleware inspect both token and cookie to check if value match.
 
 ### Dependencies
 
