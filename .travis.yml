@@ -1,0 +1,28 @@
+sudo: false
+
+language: php
+
+php:
+    - 7.1
+    - 7.2
+    - nightly
+
+matrix:
+    fast_finish: true
+    allow_failures:
+        - php: nightly
+
+env:
+    matrix:
+        - PREFER_LOWEST = "--prefer-lowest --prefer-stable"
+        - PREFER_LOWEST = ""
+
+before_script:
+    - travis_retry composer self-update
+    - travis_retry composer update $PREFER_LOWEST --no-interaction
+
+script: vendor/bin/phpunit --coverage-text --testsuite all
+
+cache:
+    directories:
+        - $HOME/.composer/cache

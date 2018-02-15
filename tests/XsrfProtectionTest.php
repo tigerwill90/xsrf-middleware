@@ -10,6 +10,8 @@
 
 namespace Tigerwill90\Middleware;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Http\Uri;
@@ -32,14 +34,14 @@ final class XsrfProtectionTest extends TestCase {
 
     private const XSRF = "csrftoken";
 
-    public function requestFactory() : Request {
+    public function requestFactory(string $method = "POST") : Request {
 
         $uri = Uri::createFromString('http://dummy.apitest.com/api/signin');
         $headers = new Headers();
         $cookies = [];
         $serverParams = [];
         $body = new Body(fopen('php://temp', 'r+'));
-        return new Request('GET', $uri, $headers, $cookies, $serverParams, $body);
+        return new Request($method, $uri, $headers, $cookies, $serverParams, $body);
 
     }
 
@@ -71,7 +73,7 @@ final class XsrfProtectionTest extends TestCase {
             "logger" => $logger
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -81,6 +83,26 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("Foo", $response->getBody());
 
+    }
+
+    public function testShouldReturn200WithSafeMethods() : void {
+        $request = $this->requestFactory("GET");
+        $response = new Response();
+        $logger = $this->loggerFactory();
+
+        $xsrfProtection = new XsrfProtection([
+            "logger" => $logger
+        ]);
+
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
+            $response->getBody()->write("Foo");
+            return $response;
+        };
+
+        $response = $xsrfProtection($request,$response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
     }
 
     public function testShouldReturn200WithPayloadSetAsParameter() : void {
@@ -99,7 +121,7 @@ final class XsrfProtectionTest extends TestCase {
             "payload" => $payload
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -128,7 +150,7 @@ final class XsrfProtectionTest extends TestCase {
 
         $xsrfProtection = new XsrfProtection([]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -156,7 +178,7 @@ final class XsrfProtectionTest extends TestCase {
 
         $xsrfProtection = new XsrfProtection([]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -187,7 +209,7 @@ final class XsrfProtectionTest extends TestCase {
             "logger" => $logger
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -217,7 +239,7 @@ final class XsrfProtectionTest extends TestCase {
             "logger" => $logger
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -247,7 +269,7 @@ final class XsrfProtectionTest extends TestCase {
             "logger" => $logger
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -276,7 +298,7 @@ final class XsrfProtectionTest extends TestCase {
             "logger" => $logger
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -306,7 +328,7 @@ final class XsrfProtectionTest extends TestCase {
             "logger" => $logger
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -332,7 +354,7 @@ final class XsrfProtectionTest extends TestCase {
             "logger" => $logger
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -354,7 +376,7 @@ final class XsrfProtectionTest extends TestCase {
             "logger" => $logger
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -384,7 +406,7 @@ final class XsrfProtectionTest extends TestCase {
             "logger" => $logger
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -412,7 +434,7 @@ final class XsrfProtectionTest extends TestCase {
             "logger" => $logger
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -446,7 +468,7 @@ final class XsrfProtectionTest extends TestCase {
             }
         ]);
 
-        $next = function($request, $response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };
@@ -475,14 +497,14 @@ final class XsrfProtectionTest extends TestCase {
         $test = false;
         $xsrfProtection = new XsrfProtection([
             "logger" => $logger,
-            "error" => function($response, $arguments) use (&$test) {
+            "error" => function(ResponseInterface $response, $arguments) use (&$test) {
                 $test = true;
                 $response->getBody()->write($arguments["message"]);
                 return $response;
             }
         ]);
 
-        $next = function($request,$response) {
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write("Foo");
             return $response;
         };

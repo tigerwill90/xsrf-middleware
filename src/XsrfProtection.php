@@ -81,6 +81,7 @@ final class XsrfProtection implements MiddlewareInterface {
         /** If method is safe, no need double submit check */
         if (!\in_array($method, ["POST", "PUT", "PATCH", "DELETE"], true)) {
             $this->log(LogLevel::INFO, "Method " . $method . " is safe, access granted");
+            return $handler->handle($request);
         }
 
         // if request match with path, double submit check
