@@ -1,3 +1,6 @@
+[![packagist 1.1.0](https://img.shields.io/badge/packagist-1.1.0-blue.svg)](https://packagist.org/packages/tigerwill90/xsrf-middleware)
+[![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE.md)
+
 # PSR-7 & PSR-15 : CSRF Protection alternative for JWT/Branca Authentication token
 
 Csrf protection based on double submit pattern, cookie - JWT/Branca alternative.
