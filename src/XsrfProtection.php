@@ -67,6 +67,7 @@ final class XsrfProtection implements MiddlewareInterface {
     public function process(Request $request, RequestHandlerInterface $handler) : Response {
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);
+        $method = $request->getMethod();
 
         // if request match with passthrough, no need double submit check
         foreach ((array)$this->options["passthrough"] as $passthrough) {
@@ -75,6 +76,11 @@ final class XsrfProtection implements MiddlewareInterface {
                 $this->log(LogLevel::INFO, "Route ignored, access granted");
                 return $handler->handle($request);
             }
+        }
+
+        /** If method is safe, no need double submit check */
+        if (!\in_array($method, ["POST", "PUT", "PATCH", "DELETE"], true)) {
+            $this->log(LogLevel::INFO, "Method " . $method . " is safe, access granted");
         }
 
         // if request match with path, double submit check

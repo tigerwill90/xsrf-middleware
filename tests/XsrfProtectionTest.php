@@ -41,7 +41,7 @@ final class XsrfProtectionTest extends TestCase {
         $body = new Body(fopen('php://temp', 'r+'));
         return new Request('GET', $uri, $headers, $cookies, $serverParams, $body);
 
-     }
+    }
 
     public function loggerFactory() :  Logger {
         $logger = new Logger("slim");
@@ -55,6 +55,10 @@ final class XsrfProtectionTest extends TestCase {
         $rotating->setFormatter($formatter);
         $logger->pushHandler($rotating);
         return $logger;
+    }
+
+    public function testShouldBeTrue() : void {
+        $this->assertTrue(true);
     }
 
     public function testShouldReturn200WithIgnoredRoute() : void {

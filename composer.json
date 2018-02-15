@@ -10,7 +10,7 @@
       "cookie",
       "auth"
     ],
-    "homepage": "https://github.com/tigerwill90/slim3-xsrf-middleware",
+    "homepage": "https://github.com/tigerwill90/xsrf-middleware",
     "license": "MIT",
     "authors": [
         {
