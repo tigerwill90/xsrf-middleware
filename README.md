@@ -1,6 +1,7 @@
 [![Latest Version](https://img.shields.io/packagist/v/tigerwill90/xsrf-middleware.svg?style=flat-square)](https://packagist.org/packages/tigerwill90/xsrf-middleware)
 [![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/tigerwill90/xsrf-middleware.svg?branch=master)](https://travis-ci.org/tigerwill90/xsrf-middleware)
+[![codecov](https://codecov.io/gh/tigerwill90/xsrf-middleware/branch/master/graph/badge.svg)](https://codecov.io/gh/tigerwill90/xsrf-middleware)
 
 
 # PSR-7 & PSR-15 : CSRF Protection alternative for JWT/Branca Authentication token

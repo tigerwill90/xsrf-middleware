@@ -1,3 +1,7 @@
+## 1.2.0-stable
+##### 2018.02.15
+* Only double submit check for unsafe methods
+
 ## 1.1.0
 ##### 2018.02.13
 * Refactor to PHP 7.1

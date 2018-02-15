@@ -41,12 +41,12 @@ final class XsrfProtection implements MiddlewareInterface {
     /**
      * PSR-3 compliant logger
      */
-    protected $logger;
+    private $logger;
 
     /**
      * Last error message
      */
-    protected $message;
+    private $message;
 
     /**
      * Create a new middleware instance
