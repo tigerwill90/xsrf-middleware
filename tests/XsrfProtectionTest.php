@@ -556,5 +556,7 @@ final class XsrfProtectionTest extends TestCase {
         $logger = new NullLogger;
         $xsrfProtection->setLogger($logger);
         $this->assertNull($xsrfProtection->log(LogLevel::WARNING, "Token not found"));
+        $this->assertEquals($logger, $xsrfProtection->getLogger());
     }
+
 }
