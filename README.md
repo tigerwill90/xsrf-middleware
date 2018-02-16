@@ -1,4 +1,5 @@
-[![Latest Version](https://img.shields.io/packagist/v/tigerwill90/xsrf-middleware.svg?style=flat-square)](https://packagist.org/packages/tigerwill90/xsrf-middleware)
+[![Latest Stable Version](https://poser.pugx.org/tigerwill90/xsrf-middleware/v/stable)](https://packagist.org/packages/tigerwill90/xsrf-middleware)
+[![Latest Unstable Version](https://poser.pugx.org/tigerwill90/xsrf-middleware/v/unstable)](https://packagist.org/packages/tigerwill90/xsrf-middleware)
 [![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/tigerwill90/xsrf-middleware.svg?branch=master)](https://travis-ci.org/tigerwill90/xsrf-middleware)
 [![codecov](https://codecov.io/gh/tigerwill90/xsrf-middleware/branch/master/graph/badge.svg)](https://codecov.io/gh/tigerwill90/xsrf-middleware)
@@ -103,9 +104,9 @@ $app->add(new Tigerwill90\Middleware\XsrfProtection([
 
 In this example, everything starting with `/api` and `/admin` will be protected, **except** `/api/orders`
 
-#### Cookie 
+#### AntiCsrf 
 
-The optional `cookie` parameter allow you to specify the name of your anti-csrf cookie.
+The optional `anticsrf` parameter allow you to specify the name of your anti-csrf cookie or header.
 
 Default parameter is `xCsrf`
  ```php
@@ -113,11 +114,11 @@ Default parameter is `xCsrf`
  
  $app->add(new Tigerwill90\Middleware\XsrfProtection([
      "path" => ["/api", "/admin"],
-     "cookie" => "csrfcookie"
+     "anticsrf" => "csrfcookie"
  ]));
  ```
  
- In this example, if the cookie "csrfcookie" exist, the middleware will compare his value with
+ In this example, if the cookie or header "csrfcookie" exist, the middleware will compare his value with
  the specified JWT/Branca token `claim` value.
  
  #### Token
@@ -250,7 +251,7 @@ $container["XsrfProtection"] = function($c) {
     function new \Tigerwill90\Middleware\XsrfProtection([
         "path" => "/api",
         "passthrough" => ["/api/users/signin", "/api/users/token"],
-        "cookie" => "xCsrf",
+        "anticsrf" => "xCsrf",
         "token" => "jwt",
         "claim" => "xsrf"
     ]);

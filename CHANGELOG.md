@@ -1,3 +1,9 @@
+## [1.2.1-stable](https://github.com/tigerwill90/xsrf-middleware/compare/1.2.0...1.2.1)
+##### 2018.16.02
+* Anti csrf can be find in header
+* Cookie option is now anticsrf option
+* More test
+
 ## 1.2.0-stable
 ##### 2018.02.15
 * Only double submit check for unsafe methods

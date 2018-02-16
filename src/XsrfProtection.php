@@ -32,7 +32,7 @@ final class XsrfProtection implements MiddlewareInterface {
         "path" => "/",
         "passthrough" => null,
         "payload" => null,
-        "cookie" => "xCsrf",
+        "anticsrf" => "xCsrf",
         "token" => "token",
         "claim" => "csrf",
         "error" => null
@@ -69,6 +69,12 @@ final class XsrfProtection implements MiddlewareInterface {
         $uri = preg_replace("#/+#", "/", $uri);
         $method = $request->getMethod();
 
+        /** If method is safe, no need double submit check */
+        if (!\in_array($method, ["POST", "PUT", "PATCH", "DELETE"], true)) {
+            $this->log(LogLevel::INFO, "Method " . $method . " is safe, access granted");
+            return $handler->handle($request);
+        }
+
         // if request match with passthrough, no need double submit check
         foreach ((array)$this->options["passthrough"] as $passthrough) {
             $passthrough = rtrim($passthrough, "/");
@@ -78,19 +84,13 @@ final class XsrfProtection implements MiddlewareInterface {
             }
         }
 
-        /** If method is safe, no need double submit check */
-        if (!\in_array($method, ["POST", "PUT", "PATCH", "DELETE"], true)) {
-            $this->log(LogLevel::INFO, "Method " . $method . " is safe, access granted");
-            return $handler->handle($request);
-        }
-
         // if request match with path, double submit check
         foreach ((array)$this->options["path"] as $path) {
             $path = rtrim($path, "/");
             if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
 
-                // If cookie cannot be found, return 401 Unauthorized
-                if (null === $cookievalue = $this->fetchCookie($request)) {
+                // If anti csrf cannot be found, return 401 Unauthorized
+                if (null === $antiCsrfValue = $this->antiCsrf($request)) {
                     $response = (new ResponseFactory)->createResponse(401);
                     return $this->error($response, [
                         "message" => $this->message
@@ -117,8 +117,8 @@ final class XsrfProtection implements MiddlewareInterface {
                     ]);
                 }
 
-                // If csrf cookie don't match with claim, return 401 Unauthorized
-                if (false === $this->validateToken($cookievalue)) {
+                // If antiCsrf don't match with claim, return 401 Unauthorized
+                if (false === $this->validateToken($antiCsrfValue)) {
                     $response = (new ResponseFactory)->createResponse(401);
                     return $this->error($response, [
                         "message" => $this->message
@@ -164,21 +164,25 @@ final class XsrfProtection implements MiddlewareInterface {
     }
 
     /**
-     * Check if cookie exist
+     * Check if anti csrf exist
      *
      * @param Request $request
      * @return null|string
      */
-    public function fetchCookie(Request $request) : ?string {
-        $message = "Cookie not found";
-        $csrfcookie = FigRequestCookies::get($request, $this->options["cookie"]);
-        $csrfvalue = $csrfcookie->getValue();
-        if (!isset($csrfvalue)) {
-            $this->message = $message;
-            $this->log(LogLevel::DEBUG, $message);
-            return null;
+    public function antiCsrf(Request $request) : ?string {
+        $message = "Anti csrf not found";
+        $csrfCookie = FigRequestCookies::get($request, $this->options["anticsrf"]);
+        $csrfValue = $csrfCookie->getValue();
+        if (!isset($csrfValue)) {
+            $header = $request->getHeader($this->options["anticsrf"]);
+            $csrfValue = (isset($header[0])) ? $header[0] : null;
+            if (!isset($csrfValue)) {
+                $this->message = $message;
+                $this->log(LogLevel::DEBUG, $message);
+                return null;
+            }
         }
-        return $csrfvalue;
+        return $csrfValue;
     }
 
     /**
@@ -221,20 +225,20 @@ final class XsrfProtection implements MiddlewareInterface {
     }
 
     /**
-     * Check if cookie value match with jwt claim value
+     * Check if anti csrf value match with jwt claim value
      *
-     * @param $cookievalue
+     * @param string $antiCsrfValue
      * @return bool
      */
-    public function validateToken(string $cookievalue) : bool {
-        $message = "Token and cookie ";
+    public function validateToken(string $antiCsrfValue) : bool {
+        $message = "Token and anti csrf ";
         $decode = $this->transformPayload($this->options["payload"]);
-        if ($decode[$this->options["claim"]] === $cookievalue) {
+        if ($decode[$this->options["claim"]] === $antiCsrfValue) {
             $this->log(LogLevel::DEBUG, $message . "match, access granted !");
             return true;
         }
         $this->message = $message . "don't match, access denied !";
-        $this->log(LogLevel::DEBUG, $message . "don't match, access denied !");
+        $this->log(LogLevel::DEBUG, $this->message );
         return false;
     }
 
@@ -315,23 +319,23 @@ final class XsrfProtection implements MiddlewareInterface {
     }
 
     /**
-     * Set a custom cookie name (overwrite default)
+     * Set a custom anti csrf name (overwrite default)
      *
-     * @param string $cookie
+     * @param string $antiCsrf
      * @return self
      */
-    public function setCookie(string $cookie) : self {
-        $this->options["cookie"] = $cookie;
+    public function setAntiCsrf(string $antiCsrf) : self {
+        $this->options["anticsrf"] = $antiCsrf;
         return $this;
     }
 
     /**
-     * get the cookie name option
+     * get the anti csrf name option
      *
      * @return string
      */
-    public function getCookie() : string {
-        return $this->options["cookie"];
+    public function getAntiCsrf() : string {
+        return $this->options["anticsrf"];
     }
 
     /**
