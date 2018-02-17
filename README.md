@@ -9,7 +9,6 @@
 
 Csrf protection based on double submit pattern, cookie - JWT/Branca alternative.
 
-I am new to the php world and this is my first middleware.
 It is based on [PSR-7 JWT Authentication Middleware](https://github.com/tuupola/slim-jwt-auth) from
 [Tuupola](https://github.com/tuupola). **This middleware is designed to work with
 JWT/Branca Authentication method and can be used with any framework using PSR-7 or PSR-15 style middlewares (since v1.1.0). It has been tested with [Slim Framework](https://www.slimframework.com/)**.
@@ -22,33 +21,35 @@ needs for generate token with links bellow.
 * [Tuupola/base62](https://github.com/tuupola/base62)
 
 The goal is to protect rest api again [Cross-site request forgery](https://en.wikipedia.org/wiki/Cross-site_request_forgery)
-attak, using double submit cookie pattern (stateless).
+attak, using double submit pattern (stateless).
 
 ### How it's work ?
 
-A double submit cookie is defined as sending a random value in both a
-cookie (httponly) and as a request parameter, with the server verifying if the cookie value
-and request value match.
+Sometimes you want save your Jwt/Branca token in a http only cookie. Since it's not possible to grab it, your payload content is safe. It's particularly true
+for JWT who have no-encrypted payload. BUT, this protection expose your api to CSRF attack.
 
 When a user authenticate to a site
 
-* Generate token with pseudorandom value
-* Generate JWT, branca and set one of payload attribute with the token generated
-* Set a `httponly` cookie value with the token generated
-* Return all to frontend
+* generate an anti-csrf `token` with pseudorandom value
+* generate `JWT` or `Branca` and set one of payload attribute with the previously `token` generated
+* send `JWT` or `Branca` to frontend in a `http-only`, `secure` cookie.
+* send the previously `token` generated in the response body
 
-When a user try to access ressource
+When an authenticated api consumer want access to your api, you need to attach the anti-csrf `token` as
 
-* Attach JWT/Branca token to header request (cookies will be automatically attached)
-* Send request
+* eventually a cookie with unique name
+* a header proprieties
+* a request body parameter
 
-When you perform an unsafe operation `[POST | PUT | PATCH | DELETE]` to you api, the middleware inspect both token and cookie to check if value match.
+For all unsafe operation `[POST | PUT | PATCH | DELETE]` to you api, the middleware inspect both `token` and `JWT` or `Branca` in `http-only` cookie to check if value match 
+and return [401 status](https://httpstatuses.com/401) if not.
 
 ### Dependencies
 
 * [dflydev-fig-cookies](https://github.com/dflydev/dflydev-fig-cookies)
 * [tuupola/callable-handler](https://github.com/tuupola/callable-handler)
 * [tuupola/http-factory](https://github.com/tuupola/http-factory)
+* [rybakit/msgpack](https://packagist.org/packages/rybakit/msgpack)
 * php-fig standards
 
 
@@ -106,7 +107,7 @@ In this example, everything starting with `/api` and `/admin` will be protected,
 
 #### AntiCsrf 
 
-The optional `anticsrf` parameter allow you to specify the name of your anti-csrf cookie or header.
+The optional `anticsrf` parameter allow you to specify the name of your anti-csrf cookie, header or parameter.
 
 Default parameter is `xCsrf`
  ```php
@@ -114,11 +115,11 @@ Default parameter is `xCsrf`
  
  $app->add(new Tigerwill90\Middleware\XsrfProtection([
      "path" => ["/api", "/admin"],
-     "anticsrf" => "csrfcookie"
+     "anticsrf" => "xCsrf"
  ]));
  ```
  
- In this example, if the cookie or header "csrfcookie" exist, the middleware will compare his value with
+ In this example, if the cookie, header or request parameter "xCsrf" exist, the middleware will compare his value with
  the specified JWT/Branca token `claim` value.
  
  #### Token
@@ -240,6 +241,22 @@ $app->add(new Tigerwill90\Middleware\XsrfProtection([
 ]));
 ````
 
+#### MessagePack
+
+The optional `msgpack` parameter allows you to use the [MessagePack](https://msgpack.org/) serialization format.
+
+Default value is `false`
+
+````php
+$app = new Slim\App
+ 
+$app->add(new Tigerwill90\Middleware\XsrfProtection([
+   "path" => ["/api", "/admin"],
+   "payload" => $container["decoded"]
+   "msgpack" => true
+]));
+````
+
 ### Implementation with JWT/Branca Authentication Middleware
 
 Branca/JWT Authentication Middleware need to run before Xsrf Middleware protection.
@@ -276,10 +293,6 @@ $container["XsrfProtection"] = function($c) {
 ```
 phpunit
 ```
-
-### Next Feature
-
-* Ability to find JWT/Branca in cookie and match with request csrf parameter.
 
 ### License
 

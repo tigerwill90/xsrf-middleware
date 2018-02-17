@@ -10,6 +10,7 @@
 
 namespace Tigerwill90\Middleware;
 
+use MessagePack\BufferUnpacker;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Server\MiddlewareInterface;
@@ -35,7 +36,8 @@ final class XsrfProtection implements MiddlewareInterface {
         "anticsrf" => "xCsrf",
         "token" => "token",
         "claim" => "csrf",
-        "error" => null
+        "error" => null,
+        "msgpack" => false
     ];
 
     /**
@@ -47,6 +49,9 @@ final class XsrfProtection implements MiddlewareInterface {
      * Last error message
      */
     private $message;
+
+    private const REQUESTMETHOD = ["POST", "PUT", "PATCH", "DELETE"];
+
 
     /**
      * Create a new middleware instance
@@ -67,11 +72,11 @@ final class XsrfProtection implements MiddlewareInterface {
     public function process(Request $request, RequestHandlerInterface $handler) : Response {
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);
-        $method = $request->getMethod();
+        $requestMethod = $request->getMethod();
 
-        /** If method is safe, no need double submit check */
-        if (!\in_array($method, ["POST", "PUT", "PATCH", "DELETE"], true)) {
-            $this->log(LogLevel::INFO, "Method " . $method . " is safe, access granted");
+        /** If method is safe and mode is AUTH, no need double submit check*/
+        if (!\in_array($requestMethod, self::REQUESTMETHOD, true)) {
+            $this->log(LogLevel::INFO, "Method " . $requestMethod . " is safe, access granted");
             return $handler->handle($request);
         }
 
@@ -90,7 +95,7 @@ final class XsrfProtection implements MiddlewareInterface {
             if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
 
                 // If anti csrf cannot be found, return 401 Unauthorized
-                if (null === $antiCsrfValue = $this->antiCsrf($request)) {
+                if (null === $antiCsrfValue = $this->csrfExist($request)) {
                     $response = (new ResponseFactory)->createResponse(401);
                     return $this->error($response, [
                         "message" => $this->message
@@ -169,20 +174,33 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param Request $request
      * @return null|string
      */
-    public function antiCsrf(Request $request) : ?string {
-        $message = "Anti csrf not found";
-        $csrfCookie = FigRequestCookies::get($request, $this->options["anticsrf"]);
-        $csrfValue = $csrfCookie->getValue();
-        if (!isset($csrfValue)) {
-            $header = $request->getHeader($this->options["anticsrf"]);
-            $csrfValue = (isset($header[0])) ? $header[0] : null;
-            if (!isset($csrfValue)) {
-                $this->message = $message;
-                $this->log(LogLevel::DEBUG, $message);
-                return null;
-            }
+    public function csrfExist(Request $request) : ?string {
+
+        /** search anti-csrf in cookie */
+        $cookies = FigRequestCookies::get($request, $this->options["anticsrf"]);
+        $cookieValue = $cookies->getValue();
+        if (isset($cookieValue)) {
+            return $cookieValue;
         }
-        return $csrfValue;
+
+        /** search anti-csrf in header */
+        $headers = $request->getHeader($this->options["anticsrf"]);
+        $header = (isset($headers[0])) ? $headers[0] : null;
+        if (isset($header)) {
+            return $header;
+        }
+
+        /** search anti-csrf in param */
+        $params = $request->getParsedBody();
+        $param = $params[$this->options["anticsrf"]];
+        if (isset($param)) {
+            return $param;
+        }
+
+        /** If no anti-csrf is found, return null */
+        $this->message = "Anti csrf not found";
+        $this->log(LogLevel::DEBUG, $this->message);
+        return null;
     }
 
     /**
@@ -309,6 +327,12 @@ final class XsrfProtection implements MiddlewareInterface {
      * @return array
      */
     public function transformPayload($payload) : array {
+        if ($this->options["msgpack"]) {
+            $unPacker = new BufferUnpacker();
+            $unPacker->reset($payload);
+            return (array)$unPacker->unpack();
+        }
+
         if (\is_string($payload)) {
             $isValideDecodedJson = json_decode($payload, true);
             if (json_last_error() === JSON_ERROR_NONE) {
@@ -451,5 +475,25 @@ final class XsrfProtection implements MiddlewareInterface {
      */
     public function getError() : Closure {
         return $this->options["error"];
+    }
+
+    /**
+     * Get msgpack
+     *
+     * @param bool $msgPack
+     * @return XsrfProtection
+     */
+    public function setMsgpack(bool $msgPack) : self {
+        $this->options["msgpack"] = $msgPack;
+        return $this;
+    }
+
+    /**
+     * Set msgpack
+     *
+     * @return bool
+     */
+    public function getMsgpack() : bool {
+        return $this->options["msgpack"];
     }
 }

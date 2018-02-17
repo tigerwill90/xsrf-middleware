@@ -1,5 +1,21 @@
+# Changelog
+
+All notable changes to this project will be documented in this file, in reverse chronological order by release.
+
+## [1.3.0-stable](https://github.com/tigerwill90/xsrf-middleware/compare/1.2.1...1.3.0)
+##### 2018.02.17
+Double submit pattern with json alternative is only relevant when Branca/JWT is in a `http-only` cookie. It's particularly
+true for JWT who have no-encrypted payload. In http-only cookie, you payload is safe but unsafe again CSRF attack.
+* Anti-csrf value is
+    * can be found in a anti-csrf cookie (manually setted from client with a different name than original cookie)
+    * can be found in header
+    * can be found in request parameter
+* Jwt/Branca should be always in http-only cookie (it's different for oAuth)
+* Refactor some line of code to match with this pattern
+* Add unpacking method for MessagePack format
+
 ## [1.2.1-stable](https://github.com/tigerwill90/xsrf-middleware/compare/1.2.0...1.2.1)
-##### 2018.16.02
+##### 2018.02.06
 * Anti csrf can be find in header
 * Cookie option is now anticsrf option
 * More test
