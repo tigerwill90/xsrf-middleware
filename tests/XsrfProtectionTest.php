@@ -247,7 +247,7 @@ final class XsrfProtectionTest extends TestCase {
         $this->assertEquals("Foo", $response->getBody());
     }
 
-    public function testShouldReturn200WithPayloadInSerializedMessagePackFormat() : void {
+    public function testShouldReturn200WithPayloadInAttributeAndSerializedMessagePackFormat() : void {
         $request = $this->requestFactory();
         $response = new Response();
 
@@ -265,6 +265,38 @@ final class XsrfProtectionTest extends TestCase {
         $request = $request->withAttribute("token",$packed);
 
         $xsrfProtection = new XsrfProtection([
+            "msgpack" => true
+        ]);
+
+        $next = function(ServerRequestInterface $request, ResponseInterface $response) {
+            $response->getBody()->write("Foo");
+            return $response;
+        };
+
+
+        $response = $xsrfProtection($request,$response, $next);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("Foo", $response->getBody());
+    }
+
+    public function testShouldReturn200WithPayloadAndSerializedMessagePackFormat() : void {
+        $request = $this->requestFactory();
+        $response = new Response();
+
+        $payload = [
+            "uid" => 1,
+            "csrf" => self::XSRF,
+            "scope" => [1,0,1,1]
+        ];
+
+        $packer = new Packer();
+        $packed = $packer->pack($payload);
+
+        $request = FigRequestCookies::set($request, Cookie::create('xCsrf', self::XSRF));
+
+        $xsrfProtection = new XsrfProtection([
+            "payload" => $packed,
             "msgpack" => true
         ]);
 
