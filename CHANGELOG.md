@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
+## [1.3.1-stable](https://github.com/tigerwill90/xsrf-middleware/compare/1.3.0...1.3.1)
+##### 2018.02.19
+* Bug fix for undefined index when no anti-csrf token is found
+* PSR1 & PSR2 coding style
+
 ## [1.3.0-stable](https://github.com/tigerwill90/xsrf-middleware/compare/1.2.1...1.3.0)
 ##### 2018.02.17
 Double submit pattern with json alternative is only relevant when Branca/JWT is in a `http-only` cookie. It's particularly

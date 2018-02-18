@@ -22,7 +22,8 @@ use Closure;
 use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Middleware\DoublePassTrait;
 
-final class XsrfProtection implements MiddlewareInterface {
+final class XsrfProtection implements MiddlewareInterface
+{
 
     use DoublePassTrait;
     
@@ -57,7 +58,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * Create a new middleware instance
      * @param array
      */
-    public function __construct(array $options = []) {
+    public function __construct(array $options = [])
+    {
         /* Store passed in options overwriting any defaults. */
         $this->setOptions($options);
     }
@@ -69,7 +71,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param RequestHandlerInterface $handler
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function process(Request $request, RequestHandlerInterface $handler) : Response {
+    public function process(Request $request, RequestHandlerInterface $handler) : Response
+    {
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);
         $requestMethod = $request->getMethod();
@@ -93,7 +96,6 @@ final class XsrfProtection implements MiddlewareInterface {
         foreach ((array)$this->options["path"] as $path) {
             $path = rtrim($path, "/");
             if (!!preg_match("@^{$path}(/.*)?$@", $uri)) {
-
                 // If anti csrf cannot be found, return 401 Unauthorized
                 if (null === $antiCsrfValue = $this->csrfExist($request)) {
                     $response = (new ResponseFactory)->createResponse(401);
@@ -103,7 +105,7 @@ final class XsrfProtection implements MiddlewareInterface {
                 }
 
                 // If payload is null and token cannot be found in request, return 401 Unauthorized
-                if(!isset($this->options["payload"])) {
+                if (!isset($this->options["payload"])) {
                     $message = "Payload not found in options";
                     $this->log(LogLevel::WARNING, $message);
                     if (false === $this->fetchToken($request)) {
@@ -142,7 +144,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param array $arguments
      * @return Response
      */
-    private function error(Response $response, array $arguments) : Response {
+    private function error(Response $response, array $arguments) : Response
+    {
         if (\is_callable($this->options["error"])) {
             $handlerResponse = $this->options["error"]($response, $arguments);
             if ($handlerResponse instanceof Response) {
@@ -158,7 +161,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param array $data Array of options.
      * @return self
      */
-    private function setOptions(array $data = []) : self {
+    private function setOptions(array $data = []) : self
+    {
         foreach ($data as $key => $value) {
             $method = "set" . ucfirst($key);
             if (method_exists($this, $method)) {
@@ -174,7 +178,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param Request $request
      * @return null|string
      */
-    public function csrfExist(Request $request) : ?string {
+    public function csrfExist(Request $request) : ?string
+    {
 
         /** search anti-csrf in cookie */
         $cookies = FigRequestCookies::get($request, $this->options["anticsrf"]);
@@ -209,7 +214,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param Request $request
      * @return bool
      */
-    public function fetchToken(Request $request) : bool {
+    public function fetchToken(Request $request) : bool
+    {
         $message = "Payload not found in request attribute";
         $decode = $request->getAttribute($this->options["token"]);
         if (!isset($decode)) {
@@ -226,9 +232,10 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return bool
      */
-    public function fetchClaim() : bool {
+    public function fetchClaim() : bool
+    {
         $decode = $this->transformPayload($this->options["payload"]);
-        if (!array_key_exists($this->options["claim"],$decode)) {
+        if (!array_key_exists($this->options["claim"], $decode)) {
             $this->message = "Claim not found in token";
             $this->log(LogLevel::DEBUG, $this->message);
             return false;
@@ -248,7 +255,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param string $antiCsrfValue
      * @return bool
      */
-    public function validateToken(string $antiCsrfValue) : bool {
+    public function validateToken(string $antiCsrfValue) : bool
+    {
         $message = "Token and anti csrf ";
         $decode = $this->transformPayload($this->options["payload"]);
         if ($decode[$this->options["claim"]] === $antiCsrfValue) {
@@ -256,7 +264,7 @@ final class XsrfProtection implements MiddlewareInterface {
             return true;
         }
         $this->message = $message . "don't match, access denied !";
-        $this->log(LogLevel::DEBUG, $this->message );
+        $this->log(LogLevel::DEBUG, $this->message);
         return false;
     }
 
@@ -266,7 +274,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param string[] or string $path
      * @return self
      */
-    public function setPath($path) : self {
+    public function setPath($path) : self
+    {
         $this->options["path"] = $path;
         return $this;
     }
@@ -276,7 +285,8 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return array
      */
-    public function getPath() : array {
+    public function getPath() : array
+    {
         return (array)$this->options["path"];
     }
 
@@ -286,7 +296,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param string[] or string $passthrough
      * @return self
      */
-    public function setPassthrough($passthrough) : self {
+    public function setPassthrough($passthrough) : self
+    {
         $this->options["passthrough"] = $passthrough;
         return $this;
     }
@@ -296,7 +307,8 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return string
      */
-    public function getPassthrough() : array {
+    public function getPassthrough() : array
+    {
         return (array)$this->options["passthrough"];
     }
 
@@ -306,7 +318,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param $payload
      * @return $this
      */
-    public function setPayload($payload) : self {
+    public function setPayload($payload) : self
+    {
         $this->options["payload"] = $payload;
         return $this;
     }
@@ -316,7 +329,8 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return array
      */
-    public function getPayload() : array {
+    public function getPayload() : array
+    {
         return $this->transformPayload($this->options["payload"]);
     }
 
@@ -326,7 +340,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param $payload
      * @return array
      */
-    public function transformPayload($payload) : array {
+    public function transformPayload($payload) : array
+    {
         if ($this->options["msgpack"]) {
             $unPacker = new BufferUnpacker();
             $unPacker->reset($payload);
@@ -348,7 +363,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param string $antiCsrf
      * @return self
      */
-    public function setAnticsrf(string $antiCsrf) : self {
+    public function setAnticsrf(string $antiCsrf) : self
+    {
         $this->options["anticsrf"] = $antiCsrf;
         return $this;
     }
@@ -358,7 +374,8 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return string
      */
-    public function getAnticsrf() : string {
+    public function getAnticsrf() : string
+    {
         return $this->options["anticsrf"];
     }
 
@@ -368,7 +385,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param string $token
      * @return self
      */
-    public function setToken(string $token) : self {
+    public function setToken(string $token) : self
+    {
         $this->options["token"] = $token;
         return $this;
     }
@@ -378,7 +396,8 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return string
      */
-    public function getToken() : string {
+    public function getToken() : string
+    {
         return $this->options["token"];
     }
 
@@ -388,7 +407,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param string $claim
      * @return self
      */
-    public function setClaim(string $claim) : self {
+    public function setClaim(string $claim) : self
+    {
         $this->options["claim"] = $claim;
         return $this;
     }
@@ -398,7 +418,8 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return string
      */
-    public function getClaim() : string {
+    public function getClaim() : string
+    {
         return $this->options["claim"];
     }
 
@@ -408,7 +429,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param LoggerInterface|null $logger
      * @return $this
      */
-    public function setLogger(LoggerInterface $logger = null) : self {
+    public function setLogger(LoggerInterface $logger = null) : self
+    {
         $this->logger = $logger;
         return $this;
     }
@@ -418,7 +440,8 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return mixed
      */
-    public function getLogger() : LoggerInterface {
+    public function getLogger() : LoggerInterface
+    {
         return $this->logger;
     }
 
@@ -430,7 +453,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param array $context
      * @return mixed
      */
-    public function log($level, $message, array $context = []) : ?bool {
+    public function log($level, $message, array $context = []) : ?bool
+    {
         if ($this->logger) {
             return $this->logger->log($level, $message, $context);
         }
@@ -443,7 +467,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param $message
      * @return $this
      */
-    public function setMessage(string $message) : self {
+    public function setMessage(string $message) : self
+    {
         $this->message = $message;
         return $this;
     }
@@ -453,7 +478,8 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return mixed
      */
-    public function getMessage() : string {
+    public function getMessage() : string
+    {
         return $this->message;
     }
 
@@ -463,7 +489,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param $error
      * @return $this
      */
-    public function setError(Closure $error) : self {
+    public function setError(Closure $error) : self
+    {
         $this->options["error"] = $error;
         return $this;
     }
@@ -473,7 +500,8 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return mixed
      */
-    public function getError() : Closure {
+    public function getError() : Closure
+    {
         return $this->options["error"];
     }
 
@@ -483,7 +511,8 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param bool $msgPack
      * @return XsrfProtection
      */
-    public function setMsgpack(bool $msgPack) : self {
+    public function setMsgpack(bool $msgPack) : self
+    {
         $this->options["msgpack"] = $msgPack;
         return $this;
     }
@@ -493,7 +522,8 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return bool
      */
-    public function getMsgpack() : bool {
+    public function getMsgpack() : bool
+    {
         return $this->options["msgpack"];
     }
 }
