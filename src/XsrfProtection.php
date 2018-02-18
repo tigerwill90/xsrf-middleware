@@ -185,14 +185,14 @@ final class XsrfProtection implements MiddlewareInterface {
 
         /** search anti-csrf in header */
         $headers = $request->getHeader($this->options["anticsrf"]);
-        $header = (isset($headers[0])) ? $headers[0] : null;
+        $header = $headers[0] ?? null;
         if (isset($header)) {
             return $header;
         }
 
         /** search anti-csrf in param */
         $params = $request->getParsedBody();
-        $param = $params[$this->options["anticsrf"]];
+        $param = $params[$this->options["anticsrf"]] ?? null;
         if (isset($param)) {
             return $param;
         }
@@ -348,7 +348,7 @@ final class XsrfProtection implements MiddlewareInterface {
      * @param string $antiCsrf
      * @return self
      */
-    public function setAntiCsrf(string $antiCsrf) : self {
+    public function setAnticsrf(string $antiCsrf) : self {
         $this->options["anticsrf"] = $antiCsrf;
         return $this;
     }
@@ -358,7 +358,7 @@ final class XsrfProtection implements MiddlewareInterface {
      *
      * @return string
      */
-    public function getAntiCsrf() : string {
+    public function getAnticsrf() : string {
         return $this->options["anticsrf"];
     }
 

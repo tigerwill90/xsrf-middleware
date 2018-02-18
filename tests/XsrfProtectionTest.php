@@ -773,9 +773,9 @@ final class XsrfProtectionTest extends TestCase {
 
     public function testShouldGetAndSetAntiCsrf() : void {
         $xsrfProtection = new XsrfProtection([]);
-        $this->assertEquals("xCsrf",$xsrfProtection->getAntiCsrf());
-        $xsrfProtection->setAntiCsrf("dummyCookie");
-        $this->assertEquals("dummyCookie",$xsrfProtection->getAntiCsrf());
+        $this->assertEquals("xCsrf",$xsrfProtection->getAnticsrf());
+        $xsrfProtection->setAnticsrf("dummyCookie");
+        $this->assertEquals("dummyCookie",$xsrfProtection->getAnticsrf());
     }
 
     public function testShouldGetAndSetToken() : void {
